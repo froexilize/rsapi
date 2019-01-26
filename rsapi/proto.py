@@ -257,7 +257,7 @@ class GetInfo(Proto):
 
 class GetTransactionsByKey(Proto):
     def __init__(self, offset, limit):
-        self.cmd_num = 20
+        self.cmd_num = CMD_NUMS['GetTransactionsByKey']
         self.structure = struct.Struct('=%s %s' % (F_HEADER, F_TRANSACTIONS))
         self.create_buffer()
         self.values = (
@@ -268,6 +268,20 @@ class GetTransactionsByKey(Proto):
             limit
         )
         self.pack()
+
+class GetInfo(Proto):
+    def __init__(self,key):
+
+        self.cmd_num = CMD_NUMS['GetInfo']
+        self.structure = struct.Struct('=%s %s' % (F_HEADER,F_PUB_KEY))
+        self.create_buffer()
+        self.values = (
+            self.cmd_num,
+            32,
+            binascii.unhexlify(key)
+        )
+        self.pack()
+
 
 class SendTransaction(Proto):
     def __init__(self,t):
@@ -288,15 +302,4 @@ class SendTransaction(Proto):
         self.pack()
 
 
-class GetInfo(Proto):
-    def __init__(self,key):
 
-        self.cmd_num = CMD_NUMS['GetInfo']
-        self.structure = struct.Struct('=%s %s' % (F_HEADER,F_PUB_KEY))
-        self.create_buffer()
-        self.values = (
-            self.cmd_num,
-            32,
-            binascii.unhexlify(key)
-        )
-        self.pack()

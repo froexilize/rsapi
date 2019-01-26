@@ -2,11 +2,21 @@
 # -*- coding: utf-8 -*-
 
 
-from api.client import *
+import rsapi.client
 import unittest
 import binascii
-import sys
 
+
+def load_pub_key(key_dir = None):
+    path1 = "public.key"
+
+    if key_dir != None:
+        path1 = key_dir + path1
+    with open(path1,"rb") as public_binary :
+        p_key = public_binary.read()
+        p_key = binascii.hexlify(p_key)
+
+    return p_key
 
 def load_keys(key_dir = None):
     path1 = "public.key"
@@ -18,26 +28,25 @@ def load_keys(key_dir = None):
 
     with open(path1,"rb") as public_binary :
         p_key = public_binary.read()
-        key1 = binascii.hexlify(p_key)
-
+        p_key = binascii.hexlify(p_key)
     with open(path2,"rb") as private_binary :
         pr_key = private_binary.read()
-        key2 = binascii.hexlify(pr_key)
+        pr_key = binascii.hexlify(pr_key)
 
-    return (key1,key2)
+    return (p_key,pr_key)
 
 
 class TestClient(unittest.TestCase):
-    key_dir = 'keys/'
+    key_dir = '../tmp/'
+
     def __init__(self, *args, **kwargs):
         super(TestClient, self).__init__(*args, **kwargs)
         self.host = '10.0.0.61'
-        self.port = 38100
+        self.port = 38101
 
-        key1,key2 = load_keys(self.key_dir)
-
-        self.test_client = Client()
-        self.test_client.set_keys(key1,key2)
+        self.test_client = rsapi.Client()
+        #key1, key2 = load_keys(self.key_dir)
+        #self.test_client.set_keys(key1,key2)
 
 
     def setUp(self):
@@ -46,11 +55,10 @@ class TestClient(unittest.TestCase):
     def tearDown(self):
         self.test_client.disconnect()
 
+
     @unittest.skip("GetBalance")
     def test_get_balance(self):
         amount = self.test_client.get_balance()
-
-        print()
 
         self.assertIsNotNone(self.test_client.response)
         if self.test_client.response is not None:
@@ -64,7 +72,7 @@ class TestClient(unittest.TestCase):
 
         self.assertIsNotNone(self.test_client.response)
         self.assertTrue(self.test_client.response.check())
-        self.assertIsInstance(counters, Counters)
+        self.assertIsInstance(counters, rsapi.Counters)
         self.assertEqual(counters.blocks, 250)
         self.assertEqual(counters.transactions, 123456)
 
@@ -123,29 +131,33 @@ class TestClient(unittest.TestCase):
         t = self.test_client.get_transaction(b_hash, t_hash)
         self.assertIsNotNone(self.test_client.response)
         self.assertTrue(self.test_client.response.check())
-        self.assertIsInstance(t,Transaction)
+        self.assertIsInstance(t,rsapi.Transaction)
 
-    def test_get_transactionsbukey(self):
-        offset = 3
-        limit = 35
-        const_pubkey = (b'50f86b12dbdb50ae9197980787198e278dc9ec94ec8491e3b79df031'
-                        b'57ad0bd1')
-        any_pubkey = binascii.unhexlify(const_pubkey)
-        txs = self.test_client.get_transactionsbykey(any_pubkey, offset, limit)
+    #@unittest.skip("transactionsbykey")
+    def test_get_transactionsbykey(self):
+        offset = 0
+        limit = 7931
+
+        test_key = load_pub_key(self.key_dir)
+
+        self.test_client.send_info(test_key)
+        txs = self.test_client.get_transactionsbykey(offset, limit)
 
         self.assertIsNotNone(self.test_client.response)
         self.assertTrue(self.test_client.response.check())
-        # self.assertEqual(len(txs), 5)
-        pprint("Get transactions:")
-        for tx in txs:
-            pprint(tx.hash_hex)
-            pprint(vars(tx))
-            pprint(vars(tx.amount))
 
-    # @unittest.skip("SendTransation")
+        print("Get transactions:")
+        # for tx in txs:
+        #     print(tx.hash_hex)
+        #     print(vars(tx))
+        #     print(vars(tx.amount))
+
+        print(len(txs))
+
+    @unittest.skip("SendTransation")
     def test_send_transaction(self):
 
-        target = b''
+        target = b'c1c02d12cdadbc73da73cbd9985b2a41ffdb8dba9de470eaab453cc3595'
         integral = 100
         fraction = 0
 

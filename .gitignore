@@ -1,5 +1,10 @@
 .idea/
 __pycache__/
+venv/
+dist/
+build/
+#test_keys
+keys/
 # Compiled python modules.
 *.pyc
 
@@ -8,3 +13,4 @@ __pycache__/
 
 # Python egg metadata, regenerated from source files by setuptools.
 /*.egg-info
+

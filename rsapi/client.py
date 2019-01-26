@@ -54,9 +54,12 @@ class Client(object):
         req_term.pack()
         self.sock.sendall(req_term.buffer.raw)
 
+    #TODO add
     def recv_data(self,cmd):
         self.response = proto.Header()
-        self.sock.recv_into(self.response.buffer, self.response.structure.size)
+        if self.response.structure.size != 0:
+            self.sock.recv_into(self.response.buffer,
+                                self.response.structure.size)
         self.response.unpack()
         if not self.response.check_cmd_num(cmd):
             return False
@@ -217,6 +220,7 @@ class Client(object):
             blocks.append(block)
         return blocks
 
+    #TODO issue on Github
     def get_transaction(self, b_hash, t_hash):
         if not self.is_connected():
             return
@@ -282,21 +286,14 @@ class Client(object):
         
         return t
 
-    def get_info(self,key):
+    def send_info(self,key):
         if not self.is_connected():
             return
 
         self.request = proto.GetInfo(key)
-        #self.send_data()
-        self.sock.sendall(self.request.buffer.raw)
-        req_term = proto.TerminatingBlock()
-        req_term.pack()
-        self.sock.sendall(req_term.buffer.raw)
+        self.send_data()
 
-        self.response = proto.Header()
-        self.sock.recv_into(self.response.buffer, self.response.structure.size)
-        self.response.unpack()
-        if not self.response.check_cmd_num('SendInfo'):
+        if not self.recv_data('SendInfo'):
             print("NOT SEND INFO")
             return
 
@@ -309,42 +306,48 @@ class Client(object):
         resp_term.unpack()
         return resp_key
 
-    def get_transactionsbykey(self, pubkey, offset, limit):
+    def get_transactionsbykey(self, offset, limit):
         if not self.is_connected():
             return
-        self.get_info(pubkey)
+
         self.request = proto.GetTransactionsByKey(offset, limit)
         self.send_data()
 
-        self.response = proto.Header()
-        self.sock.recv_into(self.response.buffer, self.response.structure.size)
-        self.response.unpack()
-
         txs = []
-        if not self.response.check_cmd_num('SendTransactionsByKey'):
+
+        if not self.recv_data('SendTransactionsByKey'):
             return txs
         if not self.response.check():
             return txs
 
-        tx_size = proto.calcsize('=%s' % proto.F_TRANSACTION)
-        block_size = proto.calcsize('=%s' % proto.F_HASH)
-        txs_size = self.response.size - block_size
 
+
+        # #TODO fix Bug
+        tx_size = proto.calcsize('=%s' % proto.F_TRANSACTION)
+        print('tx_size:=', tx_size)
+        block_size = proto.calcsize('=%s' % proto.F_HASH)
+        print('block_size:=', block_size)
+        print('responce_size',self.response.size)
+        txs_buffer_size = self.response.size - block_size
+        print('txs_size:=',txs_buffer_size)
+        # -
         r_block_hash = proto.BlockHash()
         self.sock.recv_into(r_block_hash.buffer, r_block_hash.structure.size)
         r_block_hash.unpack()
 
-        if txs_size % tx_size > 0:
+        if txs_buffer_size % tx_size > 0:
             return txs
-        txs_count = int(txs_size / tx_size)
+        txs_count = int(txs_buffer_size / tx_size)
+        print('txs_count',txs_count)
+        #
         for i in range(0, txs_count):
             tx = proto.Transaction()
             self.sock.recv_into(tx.buffer, tx.structure.size)
             tx.unpack()
-            # pprint(tx.values)
             t = s.Transaction()
             t.parse(tx.values)
             txs.append(t)
+
         return txs
 
     def send_transaction(self,target,

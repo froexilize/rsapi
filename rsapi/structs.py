@@ -42,7 +42,8 @@ class Transaction(object):
             integral=proto_transaction_values[3],
             fraction=proto_transaction_values[4]
         )
-        self.currency = proto_transaction_values[5].decode("utf-8").rstrip('\0')
+        #if proto_transaction_values != None:
+           # self.currency = proto_transaction_values[5].decode("utf-8").rstrip('\0')
 
 class Block(object):
     def __init__(self):
