@@ -254,6 +254,21 @@ class GetInfo(Proto):
         )
         self.pack()
 
+
+class GetTransactionsByKey(Proto):
+    def __init__(self, offset, limit):
+        self.cmd_num = 20
+        self.structure = struct.Struct('=%s %s' % (F_HEADER, F_TRANSACTIONS))
+        self.create_buffer()
+        self.values = (
+            self.cmd_num,
+            74,
+            b'00',
+            offset,
+            limit
+        )
+        self.pack()
+
 class SendTransaction(Proto):
     def __init__(self,t):
         self.cmd_num = CMD_NUMS['CommitTransaction']
@@ -273,8 +288,6 @@ class SendTransaction(Proto):
         self.pack()
 
 
-<<<<<<< HEAD:api/proto.py
-=======
 class GetInfo(Proto):
     def __init__(self,key):
 
@@ -287,4 +300,3 @@ class GetInfo(Proto):
             binascii.unhexlify(key)
         )
         self.pack()
->>>>>>> 97238014059d77133c60d6687baa2c6bc2031357:node/proto.py

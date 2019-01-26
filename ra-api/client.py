@@ -270,7 +270,7 @@ class Client(object):
         transaction = proto.Transaction()
         self.sock.recv_into(transaction.buffer, transaction.structure.size)
         transaction.unpack()
-        pprint(vars(transaction))
+        print(vars(transaction))
 
         resp_term = proto.TerminatingBlock()
         self.sock.recv_into(resp_term.buffer, resp_term.structure.size)
