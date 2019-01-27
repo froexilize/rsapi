@@ -95,17 +95,17 @@ class PublicKey(Proto):
     def unpack(self):
         self.values = self.structure.unpack_from(self.buffer.raw, 0)
 
-class TransactionData(Proto):
+class Transaction(Proto):
     def __init__(self):
-        self.structure = struct.Struct('=%s' % (F_DATA))
+        self.structure = struct.Struct('=%s' % (F_TRANSACTION))
         self.create_buffer()
 
     def unpack(self):
         self.values = self.structure.unpack_from(self.buffer.raw, 0)
 
-class Transaction(Proto):
+class TransactionData(Proto):
     def __init__(self):
-        self.structure = struct.Struct('=%s' % (F_TRANSACTION))
+        self.structure = struct.Struct('=%s' % (F_DATA))
         self.create_buffer()
 
     def unpack(self):
@@ -254,7 +254,6 @@ class GetInfo(Proto):
         )
         self.pack()
 
-
 class GetTransactionsByKey(Proto):
     def __init__(self, offset, limit):
         self.cmd_num = CMD_NUMS['GetTransactionsByKey']
@@ -281,7 +280,6 @@ class GetInfo(Proto):
             binascii.unhexlify(key)
         )
         self.pack()
-
 
 class SendTransaction(Proto):
     def __init__(self,t):

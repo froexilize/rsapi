@@ -44,17 +44,12 @@ class Client(object):
         logging.error("no connection")
         return False
 
-    def set_keys(self,pub_key,pr_key):
-        self.public_key = pub_key
-        self.private_key = pr_key
-
     def send_data(self):
         self.sock.sendall(self.request.buffer.raw)
         req_term = proto.TerminatingBlock()
         req_term.pack()
         self.sock.sendall(req_term.buffer.raw)
 
-    #TODO add
     def recv_data(self,cmd):
         self.response = proto.Header()
         if self.response.structure.size != 0:
@@ -66,7 +61,12 @@ class Client(object):
         return True
 
 
-#Api methods
+    def set_keys(self,pub_key,pr_key):
+        self.public_key = pub_key
+        self.private_key = pr_key
+
+
+    #Api methods
     def get_balance(self):
         if not self.is_connected():
             return
@@ -86,6 +86,7 @@ class Client(object):
 
         amount = s.Amount()
         amount.set_amount(balance.integral, balance.fraction)
+
         return amount
 
     def get_counters(self):
@@ -226,64 +227,12 @@ class Client(object):
             return
         self.request = proto.GetTransaction(b_hash, t_hash)
         self.send_data()
-
-        self.response = proto.Header()
-        self.sock.recv_into(self.response.buffer, self.response.structure.size)
-        self.response.unpack()
         if not self.response.check_cmd_num('SendTransaction'):
             return
 
-        block_hash = proto.BlockHash()
-        self.sock.recv_into(block_hash.buffer, block_hash.structure.size)
-        block_hash.unpack()
-
-##        signature = proto.Signature()
-##        self.sock.recv_into(signature.buffer, signature.structure.size)
-##        signature.unpack()
-##
-##        pub_key = proto.PublicKey()
-##        self.sock.recv_into(pub_key.buffer, pub_key.structure.size)
-##        pub_key.unpack()
-##
-##        tx_data = proto.TransactionData()
-##        self.sock.recv_into(tx_data.buffer, tx_data.structure.size)
-##        tx_data.unpack()
-##
-##        pprint(tx_data.buffer.raw)
-##        pprint(pub_key.buffer.raw)
-##        pprint(signature.buffer.raw)
-##        pprint(vars(tx_data))
-        
-
-        # from racrypt import RaCryptLib
-        # import racrypt
-        # from os import path
-        #
-        # lib = racrypt.RaCryptLib()
-        # pprint(path.dirname(racrypt.__file__))
-        # lib.load(path.dirname(racrypt.__file__))
-        # res = lib.verify(
-        #     data=tx_data.buffer.raw,
-        #     pub_key=pub_key.buffer.raw,
-        #     signature=signature.buffer.raw
-        # )
-        # pprint(res)
-
-
-
-        transaction = proto.Transaction()
-        self.sock.recv_into(transaction.buffer, transaction.structure.size)
-        transaction.unpack()
-        print(vars(transaction))
-
-        resp_term = proto.TerminatingBlock()
-        self.sock.recv_into(resp_term.buffer, resp_term.structure.size)
-        resp_term.unpack()
+        #TODO parse here
 
         t = s.Transaction()
-        
-        t.parse(transaction.values)
-        
         return t
 
     def send_info(self,key):
@@ -320,17 +269,10 @@ class Client(object):
         if not self.response.check():
             return txs
 
-
-
-        # #TODO fix Bug
         tx_size = proto.calcsize('=%s' % proto.F_TRANSACTION)
-        print('tx_size:=', tx_size)
         block_size = proto.calcsize('=%s' % proto.F_HASH)
-        print('block_size:=', block_size)
-        print('responce_size',self.response.size)
         txs_buffer_size = self.response.size - block_size
-        print('txs_size:=',txs_buffer_size)
-        # -
+
         r_block_hash = proto.BlockHash()
         self.sock.recv_into(r_block_hash.buffer, r_block_hash.structure.size)
         r_block_hash.unpack()
@@ -338,8 +280,7 @@ class Client(object):
         if txs_buffer_size % tx_size > 0:
             return txs
         txs_count = int(txs_buffer_size / tx_size)
-        print('txs_count',txs_count)
-        #
+
         for i in range(0, txs_count):
             tx = proto.Transaction()
             self.sock.recv_into(tx.buffer, tx.structure.size)
@@ -350,23 +291,12 @@ class Client(object):
 
         return txs
 
+    #TODO sign Transaction
     def send_transaction(self,target,
-                            amountIntegral,amountFraction):
+                         intg,frac):
         if not self.is_connected():
             logging.error("no connection")
         return False
-
-
-        #TODO sign Transaction
-
-        # import racrypt
-        # from os import path
-        #
-        # lib = racrypt.RaCryptLib()
-        # pprint(path.dirname(racrypt.__file__))
-        # lib.load(path.dirname(racrypt.__file__))
-
-
 
         t = s.Transaction()
         t.hash_hex = (b'c1c02d12cdadbc73da73cbd9985b2a41ffdb8dba9de470eaab453cc3595'
@@ -374,19 +304,23 @@ class Client(object):
                       b'd383be5020')
         t.sender_public = self.public_key
         t.receiver_public = target
-        t.amount.integral = amountIntegral
-        t.amount.fraction = amountFraction
+        t.amount.integral = intg
+        t.amount.fraction = frac
         t.currency = b'RAS'
 
+        # import racrypt
+        # from os import path
+        #
+        # lib = racrypt.RaCryptLib()
+        # pprint(path.dirname(racrypt.__file__))
+        # lib.load(path.dirname(racrypt.__file__))
         # lib.sign(
         #   data,self.public_key,
         #   self.private_key
         # )
 
-        #send
         self.request = proto.SendTransaction(t)
         self.send_data()
-        #receive
         if self.recv_data('SendBalance') != True:
             return False
 
