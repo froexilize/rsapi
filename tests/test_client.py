@@ -37,7 +37,7 @@ def load_keys(key_dir = None):
 
 
 class TestClient(unittest.TestCase):
-    key_dir = '../tmp/'
+    key_dir = '../keys/'
 
     def __init__(self, *args, **kwargs):
         super(TestClient, self).__init__(*args, **kwargs)
@@ -153,6 +153,23 @@ class TestClient(unittest.TestCase):
         #     print(vars(tx.amount))
 
         print(len(txs))
+
+    # @unittest.skip("transactionsbykey")
+    def test_get_fee(self):
+        test_key = load_pub_key(self.key_dir)
+
+        temp = rsapi.Amount()
+        temp.integral = 100
+        temp.fraction = 0
+
+        self.test_client.send_info(test_key)
+        fee = self.test_client.get_fee(temp)
+
+
+        self.assertIsNotNone(self.test_client.response)
+        self.assertTrue(self.test_client.response.check())
+        self.assertEqual(fee.integral,3)
+        self.assertEqual(fee.fraction,0)
 
     @unittest.skip("SendTransation")
     def test_send_transaction(self):
