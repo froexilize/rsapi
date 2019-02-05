@@ -45,12 +45,13 @@ class TestClient(unittest.TestCase):
         self.port = 38101
 
         self.test_client = rsapi.Client()
-        #key1, key2 = load_keys(self.key_dir)
-        #self.test_client.set_keys(key1,key2)
+        self.key1, self.key2 = load_keys(self.key_dir)
+        self.test_client.set_keys(self.key1,self.key2)
 
 
     def setUp(self):
         self.test_client.connect(host=self.host, port=self.port)
+
 
     def tearDown(self):
         self.test_client.disconnect()
@@ -133,7 +134,7 @@ class TestClient(unittest.TestCase):
         self.assertTrue(self.test_client.response.check())
         self.assertIsInstance(t,rsapi.Transaction)
 
-    #@unittest.skip("transactionsbykey")
+    @unittest.skip("transactionsbykey")
     def test_get_transactionsbykey(self):
         offset = 0
         limit = 7931
@@ -154,12 +155,12 @@ class TestClient(unittest.TestCase):
 
         print(len(txs))
 
-    # @unittest.skip("transactionsbykey")
+    @unittest.skip("get_fee")
     def test_get_fee(self):
         test_key = load_pub_key(self.key_dir)
 
         temp = rsapi.Amount()
-        temp.integral = 100
+        temp.integral = 2
         temp.fraction = 0
 
         self.test_client.send_info(test_key)
@@ -168,20 +169,31 @@ class TestClient(unittest.TestCase):
 
         self.assertIsNotNone(self.test_client.response)
         self.assertTrue(self.test_client.response.check())
-        self.assertEqual(fee.integral,3)
+        self.assertEqual(fee.integral,1)
         self.assertEqual(fee.fraction,0)
 
-    @unittest.skip("SendTransation")
-    def test_send_transaction(self):
+    @unittest.skip("send_info")
+    def test_send_info(self):
+        resp_key = self.test_client.send_info(self.key1)
+        print(binascii.hexlify(resp_key))
+        self.assertTrue(True)
 
-        target = b'c1c02d12cdadbc73da73cbd9985b2a41ffdb8dba9de470eaab453cc3595'
+
+    #@unittest.skip("SendTransation")
+    def test_send_transaction(self):
+        self.test_client.send_info(self.key1)
+
+        target = self.key1
         integral = 100
         fraction = 0
 
+        print(self.key2)
         ok = self.test_client.send_transaction(target,
                                                integral,
                                                fraction)
-        self.assertTrue(ok)
+
+        self.assertIsNotNone(self.test_client.response)
+        self.assertTrue(self.test_client.response.check())
 
 if __name__ == '__main__':
     unittest.main()

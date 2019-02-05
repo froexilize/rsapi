@@ -4,7 +4,9 @@ from . import structs as s
 from . import proto
 import logging
 import socket
-
+import os
+import binascii
+import random
 
 class Client(object):
     host = '127.0.0.1'
@@ -30,6 +32,7 @@ class Client(object):
         server_address = (self.host, self.port)
         try:
             self.sock.connect(server_address)
+            #self.send_info(self.public_key)
             self.connected = True
         except Exception as e:
             logging.error(str(e))
@@ -320,33 +323,55 @@ class Client(object):
                          intg,frac):
         if not self.is_connected():
             logging.error("no connection")
-        return False
+            return False
+
+        import racrypt
+        from os import path
+
+        lib = racrypt.RaCryptLib()
+        print(path.dirname(racrypt.__file__))
+        lib.load(path.dirname(racrypt.__file__))
 
         t = s.Transaction()
-        t.hash_hex = (b'c1c02d12cdadbc73da73cbd9985b2a41ffdb8dba9de470eaab453cc3595'
-                      b'eab31f84bbe0766aea98b7ab5487eb5f962fc9c3ed6b6119600428d55ba'
-                      b'd383be5020')
         t.sender_public = self.public_key
         t.receiver_public = target
         t.amount.integral = intg
         t.amount.fraction = frac
         t.currency = b'RAS'
 
-        # import racrypt
-        # from os import path
-        #
-        # lib = racrypt.RaCryptLib()
-        # pprint(path.dirname(racrypt.__file__))
-        # lib.load(path.dirname(racrypt.__file__))
-        # lib.sign(
-        #   data,self.public_key,
-        #   self.private_key
-        # )
-
+        buffer = bytearray(0)
+        #64
+        buffer += binascii.unhexlify(t.sender_public)
+        buffer += binascii.unhexlify(t.receiver_public)
+        #12
+        buffer += t.amount.integral.to_bytes(4, 'big')
+        buffer += t.amount.fraction.to_bytes(8, 'big')
+        #16
+        buffer += t.currency
+        buffer += bytearray(13)
+        #32
+        t.salt = bytearray(32)
+        for it in range(32):
+            t.salt[it] = random.randint(0, 255)
+        buffer += t.salt
+        for buf in buffer:
+            print(buf)
+        print(len(buffer))
+        result = lib.sign(
+            bytes(buffer), len(buffer),
+            binascii.unhexlify(self.public_key),
+            binascii.unhexlify(self.private_key),
+        )
+        result = lib.verify( bytes(buffer), len(buffer),
+            binascii.unhexlify(self.public_key),lib.signature)
+        print(lib.error)
+        print('verify is',result)
+        t.hash_hex = binascii.unhexlify(self.private_key)
+        print(binascii.hexlify(lib.signature))
         self.request = proto.SendTransaction(t)
         self.send_data()
-        if self.recv_data('SendBalance') != True:
-            return False
+        if self.recv_data('Error') != True:
+            pass
 
         resp_term = proto.TerminatingBlock()
         self.sock.recv_into(resp_term.buffer, resp_term.structure.size)

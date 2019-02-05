@@ -283,7 +283,6 @@ class GetInfo(Proto):
         )
         self.pack()
 
-
 class GetFee(Proto):
     def __init__(self,amount):
         self.cmd_num = CMD_NUMS['GetFee']
@@ -305,13 +304,13 @@ class SendTransaction(Proto):
         self.values = (
             self.cmd_num,
             188,
-            binascii.unhexlify(t.hash_hex),
+            t.hash_hex,
             binascii.unhexlify(t.sender_public),
             binascii.unhexlify(t.receiver_public),
             t.amount.integral,
             t.amount.fraction,
             self.currency,
-            binascii.unhexlify(t.hash_hex)
+            t.salt
         )
         self.pack()
 
