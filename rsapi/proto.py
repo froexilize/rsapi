@@ -42,6 +42,8 @@ CMD_NUMS = {
     'Error':19,
     'GetTransactionsByKey':20,
 	'SendTransactionsByKey':21,
+    'GetFee':22,
+    'SendFee':23,
 }
 CMD_NUMS_MAX = max(CMD_NUMS.values())
 
@@ -278,6 +280,20 @@ class GetInfo(Proto):
             self.cmd_num,
             32,
             binascii.unhexlify(key)
+        )
+        self.pack()
+
+
+class GetFee(Proto):
+    def __init__(self,amount):
+        self.cmd_num = CMD_NUMS['GetFee']
+        self.structure = struct.Struct('=%s %s' % (F_HEADER,F_BALANCE))
+        self.create_buffer()
+        self.values = (
+            self.cmd_num,
+            12,
+            amount.integral,
+            amount.fraction,
         )
         self.pack()
 

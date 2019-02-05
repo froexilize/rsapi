@@ -292,6 +292,30 @@ class Client(object):
         return txs
 
     #TODO sign Transaction
+    def get_fee(self,amount):
+        if not self.is_connected():
+            logging.error("no connection")
+            return
+
+        self.request = proto.GetFee(amount)
+        self.send_data()
+        if not self.recv_data('SendFee') and \
+                not self.response.check():
+            return
+
+        fee = proto.Balance()
+        self.sock.recv_into(fee.buffer,fee.structure.size)
+        fee.unpack()
+
+        resp_term = proto.TerminatingBlock()
+        self.sock.recv_into(resp_term.buffer, resp_term.structure.size)
+        resp_term.unpack()
+
+        _amount = s.Amount()
+        _amount.set_amount(fee.integral, fee.fraction)
+        return _amount
+
+
     def send_transaction(self,target,
                          intg,frac):
         if not self.is_connected():
