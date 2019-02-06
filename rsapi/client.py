@@ -1,91 +1,39 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from . import structs as s
+
 from . import proto
-import logging
-import socket
-import os
-import binascii
-import random
+from . import connector as h
+from . import signer
+from . import structs as s
 
-class Client(object):
-    host = '127.0.0.1'
-    port = 38100
-    connected = False
-    sock_timeout = 1000
-    request = None
-    response = None
 
+
+def createProto(self, type):
+    pass
+
+class apiClient(object):
+    _connector = None
     private_key = None
     public_key = None
 
     def __init__(self):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        if self.sock_timeout is not None:
-            self.sock.settimeout(self.sock_timeout)
+       self._connector = h.connector()
 
-    def connect(self, host=None, port=None):
-        if host is not None:
-            self.host = host
-        if port is not None:
-            self.port = port
-        server_address = (self.host, self.port)
-        try:
-            self.sock.connect(server_address)
-            #self.send_info(self.public_key)
-            self.connected = True
-        except Exception as e:
-            logging.error(str(e))
-
-    def disconnect(self):
-        if self.connected:
-            self.sock.close()
-
-    def is_connected(self):
-        if self.connected:
-            return True
-        logging.error("no connection")
-        return False
-
-    def send_data(self):
-        self.sock.sendall(self.request.buffer.raw)
-        req_term = proto.TerminatingBlock()
-        req_term.pack()
-        self.sock.sendall(req_term.buffer.raw)
-
-    def recv_data(self,cmd):
-        self.response = proto.Header()
-        if self.response.structure.size != 0:
-            self.sock.recv_into(self.response.buffer,
-                                self.response.structure.size)
-        self.response.unpack()
-        if not self.response.check_cmd_num(cmd):
-            return False
-        return True
-
-
+    #wtf method
     def set_keys(self,pub_key,pr_key):
         self.public_key = pub_key
         self.private_key = pr_key
 
-
     #Api methods
     def get_balance(self):
-        if not self.is_connected():
-            return
-        self.request = proto.GetBalance()
-        self.send_data()
-
-        if self.recv_data('SendBalance') != True:
+        if not self._connector.is_connected():
             return
 
-        balance = proto.Balance()
-        self.sock.recv_into(balance.buffer, balance.structure.size)
-        balance.unpack()
+        balance = self._handler.method(h.PROTO_TYPE['Balance'])
+        if balance == None:
+            #TODO error
+            return None
 
-        resp_term = proto.TerminatingBlock()
-        self.sock.recv_into(resp_term.buffer, resp_term.structure.size)
-        resp_term.unpack()
 
         amount = s.Amount()
         amount.set_amount(balance.integral, balance.fraction)
@@ -93,70 +41,80 @@ class Client(object):
         return amount
 
     def get_counters(self):
-        if not self.connected:
-            logging.error("no connection")
+        if not self._connector.is_connected():
             return
 
-        self.request = proto.GetCounters()
-        self.send_data()
-
-        if self.recv_data('SendCounters') != True:
+        r_counters = self._handler.method(h.PROTO_TYPE['Counters'])
+        if r_counters == None:
             return
 
-        r_counters = proto.Counters()
-        self.sock.recv_into(r_counters.buffer, r_counters.structure.size)
-        r_counters.unpack()
-
-        resp_term = proto.TerminatingBlock()
-        self.sock.recv_into(resp_term.buffer, resp_term.structure.size)
-        resp_term.unpack()
+        # self.request = proto.GetCounters()
+        # self.send_data()
+        #
+        # if self.recv_data('SendCounters') != True:
+        #     return
+        #
+        # r_counters = proto.Counters()
+        # self.sock.recv_into(r_counters.buffer, r_counters.structure.size)
+        # r_counters.unpack()
+        #
+        # resp_term = proto.TerminatingBlock()
+        # self.sock.recv_into(resp_term.buffer, resp_term.structure.size)
+        # resp_term.unpack()
 
         counters = s.Counters()
         counters.set_vals(r_counters.blocks, r_counters.transactions)
         return counters
 
     def get_last_hash(self):
-        if not self.is_connected():
+        if not self._connector.is_connected():
             return
 
-        self.request = proto.GetLastHash()
-        self.send_data()
+        (r_block_hash, term_block) = self._handler.method(h.PROTO_TYPE['LastHash'])
 
-        if self.recv_data('SendLastHash') != True:
-            return
 
-        r_block_hash = proto.BlockHash()
-        self.sock.recv_into(r_block_hash.buffer, r_block_hash.structure.size)
-        r_block_hash.unpack()
-
-        resp_term = proto.TerminatingBlock()
-        self.sock.recv_into(resp_term.buffer, resp_term.structure.size)
-        resp_term.unpack()
+        # self.request = proto.GetLastHash()
+        # self.send_data()
+        #
+        # if self.recv_data('SendLastHash') != True:
+        #     return
+        #
+        # r_block_hash = proto.BlockHash()
+        # self.sock.recv_into(r_block_hash.buffer, r_block_hash.structure.size)
+        # r_block_hash.unpack()
+        #
+        # resp_term = proto.TerminatingBlock()
+        # self.sock.recv_into(resp_term.buffer, resp_term.structure.size)
+        # resp_term.unpack()
 
         block = s.Block()
         block.set_hash(r_block_hash.get_hash())
         return block
 
+    #wtf???
     def get_block_size(self, block_hash):
-        if not self.is_connected():
-            return
-        self.request = proto.GetBlockSize(block_hash)
-        self.send_data()
-
-        if self.recv_data('SendBlockSize') != True:
+        if not self._connector.is_connected():
             return
 
-        r_block_hash = proto.BlockHash()
-        self.sock.recv_into(r_block_hash.buffer, r_block_hash.structure.size)
-        r_block_hash.unpack()
+        block_size = self._handler.method(h.PROTO_TYPE['BlockSize'])
 
-        block_size = proto.BlockSize()
-        self.sock.recv_into(block_size.buffer, block_size.structure.size)
-        block_size.unpack()
-
-        resp_term = proto.TerminatingBlock()
-        self.sock.recv_into(resp_term.buffer, resp_term.structure.size)
-        resp_term.unpack()
+        # self.request = proto.GetBlockSize(block_hash)
+        # self.send_data()
+        #
+        # if self.recv_data('SendBlockSize') != True:
+        #     return
+        #
+        # r_block_hash = proto.BlockHash()
+        # self.sock.recv_into(r_block_hash.buffer, r_block_hash.structure.size)
+        # r_block_hash.unpack()
+        #
+        # block_size = proto.BlockSize()
+        # self.sock.recv_into(block_size.buffer, block_size.structure.size)
+        # block_size.unpack()
+        #
+        # resp_term = proto.TerminatingBlock()
+        # self.sock.recv_into(resp_term.buffer, resp_term.structure.size)
+        # resp_term.unpack()
 
         block_size = block_size.values[0]
         return block_size
@@ -164,18 +122,8 @@ class Client(object):
     def get_transactions(self, block_hash, offset, limit):
         if not self.is_connected():
             return
-        self.request = proto.GetTransactions(block_hash, offset, limit)
-        self.send_data()
 
-        self.response = proto.Header()
-        self.sock.recv_into(self.response.buffer, self.response.structure.size)
-        self.response.unpack()
-
-        txs = []
-        if not self.response.check_cmd_num('SendTransactions'):
-            return txs
-        if not self.response.check():
-            return txs
+        txs = self._handler.method(h.PROTO_TYPE['Transactions'])
 
         tx_size = proto.calcsize('=%s' % proto.F_TRANSACTION)
         block_size = proto.calcsize('=%s' % proto.F_HASH)
@@ -190,9 +138,9 @@ class Client(object):
         txs_count = int(txs_size / tx_size)
         for i in range(0, txs_count):
             tx = proto.Transaction()
+            self._connector.recv()
             self.sock.recv_into(tx.buffer, tx.structure.size)
             tx.unpack()
-            #pprint(tx.values)
             t = s.Transaction()
             t.parse(tx.values)
             txs.append(t)
@@ -294,25 +242,26 @@ class Client(object):
 
         return txs
 
-    #TODO sign Transaction
     def get_fee(self,amount):
         if not self.is_connected():
             logging.error("no connection")
             return
 
-        self.request = proto.GetFee(amount)
-        self.send_data()
-        if not self.recv_data('SendFee') and \
-                not self.response.check():
-            return
+        (fee, term_block) = self._handler.method(PROTO_TYPE['Fee'])
 
-        fee = proto.Balance()
-        self.sock.recv_into(fee.buffer,fee.structure.size)
-        fee.unpack()
-
-        resp_term = proto.TerminatingBlock()
-        self.sock.recv_into(resp_term.buffer, resp_term.structure.size)
-        resp_term.unpack()
+        # self.request = proto.GetFee(amount)
+        # self.send_data()
+        # if not self.recv_data('SendFee') and \
+        #         not self.response.check():
+        #     return
+        #
+        # fee = proto.Balance()
+        # self.sock.recv_into(fee.buffer,fee.structure.size)
+        # fee.unpack()
+        #
+        # resp_term = proto.TerminatingBlock()
+        # self.sock.recv_into(resp_term.buffer, resp_term.structure.size)
+        # resp_term.unpack()
 
         _amount = s.Amount()
         _amount.set_amount(fee.integral, fee.fraction)
@@ -325,51 +274,22 @@ class Client(object):
             logging.error("no connection")
             return False
 
-        import racrypt
-        from os import path
 
-        lib = racrypt.RaCryptLib()
-        lib.load(path.dirname(racrypt.__file__))
-
-        salt_sz = 32
-        t = s.Transaction()
-        t.sender_public = self.public_key
-        t.receiver_public = target
-        t.amount.integral = intg
-        t.amount.fraction = frac
-        t.currency = b'RAS'
-        t.salt = bytearray(salt_sz)
-        for it in range(salt_sz):
-            t.salt[it] = random.randint(0, 255)
-
-        buffer = bytearray()
-        buffer += binascii.unhexlify(t.sender_public)
-        buffer += binascii.unhexlify(t.receiver_public)
-        buffer += t.amount.integral.to_bytes(4, 'little')
-        buffer += t.amount.fraction.to_bytes(8, 'little')
-        buffer += t.currency
-        buffer += bytearray(13)
-        buffer += t.salt
+        t = self._signer.transaction(self.private_key,
+                                      self.public_key,
+                                      target,intg,frac)
 
 
-        result = lib.sign(
-            bytes(buffer), len(buffer),
-            binascii.unhexlify(self.public_key),
-            binascii.unhexlify(self.private_key),
-        )
+        resp_term = self._connector.method(PROTO_TYPE['SendTransaction'],t)
 
-        t.hash_hex =lib.signature
-        print('\0')
-        print(binascii.hexlify(lib.signature))
-
-        self.request = proto.SendTransaction(t)
-        self.send_data()
-        if self.recv_data('Error') != True:
-            pass
-
-        resp_term = proto.TerminatingBlock()
-        self.sock.recv_into(resp_term.buffer, resp_term.structure.size)
-        resp_term.unpack()
+        # self.request = proto.SendTransaction(t)
+        # self.send_data()
+        #
+        # if self.recv_data('Error') != True:
+        #     pass
+        # resp_term = proto.TerminatingBlock()
+        # self.sock.recv_into(resp_term.buffer, resp_term.structure.size)
+        # resp_term.unpack()
 
         return True
 
