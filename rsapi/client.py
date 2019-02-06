@@ -329,45 +329,39 @@ class Client(object):
         from os import path
 
         lib = racrypt.RaCryptLib()
-        print(path.dirname(racrypt.__file__))
         lib.load(path.dirname(racrypt.__file__))
 
+        salt_sz = 32
         t = s.Transaction()
         t.sender_public = self.public_key
         t.receiver_public = target
         t.amount.integral = intg
         t.amount.fraction = frac
         t.currency = b'RAS'
+        t.salt = bytearray(salt_sz)
+        for it in range(salt_sz):
+            t.salt[it] = random.randint(0, 255)
 
-        buffer = bytearray(0)
-        #64
+        buffer = bytearray()
         buffer += binascii.unhexlify(t.sender_public)
         buffer += binascii.unhexlify(t.receiver_public)
-        #12
-        buffer += t.amount.integral.to_bytes(4, 'big')
-        buffer += t.amount.fraction.to_bytes(8, 'big')
-        #16
+        buffer += t.amount.integral.to_bytes(4, 'little')
+        buffer += t.amount.fraction.to_bytes(8, 'little')
         buffer += t.currency
         buffer += bytearray(13)
-        #32
-        t.salt = bytearray(32)
-        for it in range(32):
-            t.salt[it] = random.randint(0, 255)
         buffer += t.salt
-        for buf in buffer:
-            print(buf)
-        print(len(buffer))
+
+
         result = lib.sign(
             bytes(buffer), len(buffer),
             binascii.unhexlify(self.public_key),
             binascii.unhexlify(self.private_key),
         )
-        result = lib.verify( bytes(buffer), len(buffer),
-            binascii.unhexlify(self.public_key),lib.signature)
-        print(lib.error)
-        print('verify is',result)
-        t.hash_hex = binascii.unhexlify(self.private_key)
+
+        t.hash_hex =lib.signature
+        print('\0')
         print(binascii.hexlify(lib.signature))
+
         self.request = proto.SendTransaction(t)
         self.send_data()
         if self.recv_data('Error') != True:

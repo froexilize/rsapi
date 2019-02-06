@@ -187,7 +187,7 @@ class TestClient(unittest.TestCase):
         integral = 100
         fraction = 0
 
-        print(self.key2)
+
         ok = self.test_client.send_transaction(target,
                                                integral,
                                                fraction)
