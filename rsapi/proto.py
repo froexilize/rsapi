@@ -272,7 +272,6 @@ class GetTransactionsByKey(Proto):
 
 class GetInfo(Proto):
     def __init__(self,key):
-
         self.cmd_num = CMD_NUMS['GetInfo']
         self.structure = struct.Struct('=%s %s' % (F_HEADER,F_PUB_KEY))
         self.create_buffer()

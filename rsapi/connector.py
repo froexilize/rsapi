@@ -3,11 +3,11 @@
 
 import logging
 import socket
-from . import proto
+from . import proto 
 from . import structs as s
 
 
-PROTO_TYPE = {
+PROTO_NUMS = {
     'Balance':1,
     'Counters':2,
     'LastHash':3,
@@ -23,34 +23,57 @@ PROTO_TYPE = {
 }
 
 
-def _createGetProto(self, type, *args):
+def _createGetProto(type, *args):
     _proto = None
-    if type == PROTO_TYPE['Balance']:
+    if type == proto.CMD_NUMS['GetBalance']:
         _proto = proto.GetBalance()
-    elif type == PROTO_TYPE['LastHash']:
+    elif type == proto.CMD_NUMS['GetLastHash']:
         _proto = proto.GetLastHash()
-    elif type == PROTO_TYPE['Counters']:
+    elif type == proto.CMD_NUMS['GetCounters']:
         _proto = proto.GetCounters()
-    elif type == PROTO_TYPE['BlockSize']:
-        _proto = proto.GetBlockSize()
-    elif type == PROTO_TYPE['Blocks']:
-        _proto = proto.GetBlocks()
-    elif type == PROTO_TYPE['Transaction']:
-        _proto = proto.GetTransaction()
-    elif type == PROTO_TYPE['Transactions']:
-        _proto = proto.GetTransactions()
-    elif type == PROTO_TYPE['TransactionByKey']:
-        _proto = proto.GetTransactionsByKey()
-    elif type == PROTO_TYPE['TerminatingBlock']:
+    elif type == proto.CMD_NUMS['GetBlockSize']:
+        if len(args) != 2:
+            return _proto
+        _proto = proto.GetBlockSize(args)
+    elif type == proto.CMD_NUMS['GetBlocks']:
+        if len(args) != 2:
+            return _proto
+        _proto = proto.GetBlocks(args)
+    elif type == proto.CMD_NUMS['GetTransaction']:
+        if len(args) != 2:
+            return _proto
+        _proto = proto.GetTransaction(args)
+    elif type == proto.CMD_NUMS['GetTransactions']:
+        if len(args) != 3:
+            return _proto
+        _proto = proto.GetTransactions(args)
+    elif type == proto.CMD_NUMS['GetTransactionByKey']:
+        if len(args) != 2:
+            return _proto
+        _proto = proto.GetTransactionsByKey(args)
+    elif type == proto.CMD_NUMS['GetTerminatingBlock']:
         _proto = proto.TerminatingBlock()
-    elif type == PROTO_TYPE['Fee']:
-        _proto = proto.GetFee()
-    elif type == PROTO_TYPE['SendTransaction']:
-        _proto = proto.SendTransaction()
-    elif type == PROTO_TYPE['Info']:
-        _proto = proto.GetInfo()
+    elif type == proto.CMD_NUMS['GetFee']:
+        if len(args) != 1:
+            return _proto
+        _proto = proto.GetFee(args)
+    elif type == proto.CMD_NUMS['CommitTransaction']:
+        if len(args) != 1:
+            return _proto
+        _proto = proto.SendTransaction(args)
+    elif type == proto.CMD_NUMS['GetInfo']:
+        if len(args) != 1:
+            return _proto
+        _proto = proto.GetInfo(args)
     return _proto
 
+def _createStruct(type):
+    _s = None
+    if type == proto.CMD_NUMS['GetFee']:
+        _s = s.Amount()
+    elif type == proto.CMD_NUMS['GetInfo']:
+        _s = proto.PublicKey()
+    return _s
 
 class Connector(object):
     host = '127.0.0.1'
@@ -108,33 +131,33 @@ class Connector(object):
         return True
 
 
-
-
-
-    def _createProto(self,type,*argc):
-        proto = None
-        if type == '':
-            proto
-        elif type == '':
-            proto
+    def _sendProto(self,type):
+        _s= _createStruct(type)
+        if _s == None:
+            print('Error to create Proto')
+            return
         self.sock.recv_into(proto.buffer,proto.structure.size)
-        proto.unpack()
+        _s.unpack()
 
         resp_block = proto.TerminatingBlock()
         self.sock.recv_into(resp_block.buffer,resp_block.structure.size)
         resp_block.unpack()
 
-        return proto
+        return _s
 
     def method(self,*argc,type):
-        self.request = self._createGetProto(type,argc)
+        self.request = _createGetProto(type,argc)
+        if self.request == None:
+            print('Error to create request')
+            return
         self.send_data()
         cmd = type+1
-        if type == PROTO_TYPE['SendTransaction']:
+        if type == proto.CMD_NUMS['CommitTransaction']:
             cmd += 1
         ok = self.recv_cmd(cmd)
         if not ok:
+            print('Error to check cmd')
             return None
-        result = self._createProto(type)
+        result = self._sendProto(type)
 
         return result
