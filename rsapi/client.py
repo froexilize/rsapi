@@ -42,7 +42,7 @@ class apiClient(object):
         block.set_hash(r_block_hash.get_hash())
         return block
 
-    #wtf???
+
     def get_block_size(self, block_hash):
         if not self._handler.is_connected():
             return
@@ -51,6 +51,7 @@ class apiClient(object):
 
         block_size = block_size.values[0]
         return block_size
+
 
     def get_transactions(self, block_hash, offset, limit):
         if not self._handler.is_connected():
@@ -116,6 +117,7 @@ class apiClient(object):
         t = s.Transaction()
         return t
 
+
     def send_info(self, key):
         if not self._handler.is_connected():
             return False
@@ -171,7 +173,8 @@ class apiClient(object):
         if not self._handler.is_connected():
             return False
 
-        fee = self._handler.method(amount,'wft',type=p.CMD_NUMS['GetFee'])
+        fee = self._handler.method(amount,'wft',
+                                   type=p.CMD_NUMS['GetFee'])
 
         _amount = s.Amount()
         _amount.set_amount(fee.integral, fee.fraction)
