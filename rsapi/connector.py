@@ -6,23 +6,6 @@ import socket
 from . import proto 
 from . import structs as s
 
-
-PROTO_NUMS = {
-    'Balance':1,
-    'Counters':2,
-    'LastHash':3,
-    'BlockSize':4,
-    'Transactions':5,
-    'Blocks':6,
-    'Transaction':7,
-    'Info':8,
-    'Fee':9,
-    'TransactionByKey':10,
-    'SendTransaction':11,
-    'TerminatingBlock':12
-}
-
-
 def _createGetProto(type, *args):
     _proto = None
     if type == proto.CMD_NUMS['GetBalance']:
@@ -48,11 +31,10 @@ def _createGetProto(type, *args):
             return _proto
         _proto = proto.GetTransactions(args)
     elif type == proto.CMD_NUMS['GetTransactionsByKey']:
-        if len(args) != 2:
+        if len(args) != 1:
             return _proto
-        _proto = proto.GetTransactionsByKey(args)
-    # elif type == proto.CMD_NUMS['TerminatingBlock']:
-    #     _proto = proto.TerminatingBlock()
+        offset,limit = args[0]
+        _proto = proto.GetTransactionsByKey(offset,limit)
     elif type == proto.CMD_NUMS['GetFee']:
         if len(args) != 1:
             return _proto
@@ -61,7 +43,8 @@ def _createGetProto(type, *args):
     elif type == proto.CMD_NUMS['CommitTransaction']:
         if len(args) != 1:
             return _proto
-        _proto = proto.SendTransaction(args)
+        t,wtf = args[0]
+        _proto = proto.SendTransaction(t)
     elif type == proto.CMD_NUMS['GetInfo']:
         if len(args) != 1:
             return _proto
@@ -73,9 +56,12 @@ def _createStruct(type):
     _s = None
     if type == proto.CMD_NUMS['GetFee']:
         _s = proto.Balance()
+    if type == proto.CMD_NUMS['GetBalance']:
+        _s = proto.Balance()
     elif type == proto.CMD_NUMS['GetInfo']:
         _s = proto.PublicKey()
     return _s
+
 
 class Connector(object):
     host = '127.0.0.1'
@@ -128,14 +114,25 @@ class Connector(object):
             self.sock.recv_into(self.response.buffer,
                                 self.response.structure.size)
         self.response.unpack()
-        print('my cmd is',self.response.cmd_num)
         if not self.response.cmd_num == cmd:
             return False
         return True
 
 
+    def recv_into(self,type):
+        result = None
+        if type == 'Transaction':
+            result = proto.Transaction()
+        elif type == 'BlockHash':
+            result == proto.BlockHash()
+        self.sock.recv_into(result.buffer, result.structure.size)
+        return result.unpack()
+
+        return result
+
+
     def _sendProto(self,type):
-        _s= _createStruct(type)
+        _s = _createStruct(type)
         if _s == None:
             print('Error to create Proto')
             return

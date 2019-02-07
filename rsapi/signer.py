@@ -38,3 +38,4 @@ def transaction(pr_key,from_key,to_key,intg,frac):
     )
 
     t.hash_hex = lib.signature
+    return t
