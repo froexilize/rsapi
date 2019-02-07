@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
      name='rsapi',
-     version='0.2',
+     version='0.1.5',
      author="Rasmart team",
      author_email="rasmarutil@gmail.com",
      description="api impl on python3",
