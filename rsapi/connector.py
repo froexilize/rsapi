@@ -60,6 +60,10 @@ def _createStruct(type):
         _s = proto.Balance()
     elif type == proto.CMD_NUMS['GetInfo']:
         _s = proto.PublicKey()
+    elif type == proto.CMD_NUMS['GetCounters']:
+        _s = proto.Counters()
+    elif type == proto.CMD_NUMS['GetTransactionsByKey']:
+        _s = proto.Balance()
     return _s
 
 
@@ -124,17 +128,17 @@ class Connector(object):
         if type == 'Transaction':
             result = proto.Transaction()
         elif type == 'BlockHash':
-            result == proto.BlockHash()
+            result = proto.BlockHash()
         self.sock.recv_into(result.buffer, result.structure.size)
-        return result.unpack()
+        result.unpack()
 
         return result
 
 
-    def _sendProto(self,type):
+    def _createStruct(self,type):
         _s = _createStruct(type)
         if _s == None:
-            print('Error to create Proto')
+            print('Error to create Struct')
             return
         self.sock.recv_into(_s.buffer,_s.structure.size)
         _s.unpack()
@@ -159,6 +163,6 @@ class Connector(object):
         if not ok:
             print('Error to check cmd')
             return None
-        result = self._sendProto(type)
+        result = self._createStruct(type)
 
         return result

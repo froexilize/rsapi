@@ -24,7 +24,7 @@ class apiClient(object):
         if not self._handler.is_connected():
             return
 
-        r_counters = self._handler.method(type=h.PROTO_TYPE['Counters'])
+        r_counters = self._handler.method(type=p.CMD_NUMS['GetCounters'])
         if r_counters == None:
             return
 
@@ -145,15 +145,16 @@ class apiClient(object):
         if not self._handler.is_connected():
             return
 
-        txs = self._handler.method(offset,limit,
+        answer = self._handler.method(offset,limit,
                                    type=p.CMD_NUMS['GetTransactionsByKey'])
 
-        if txs == None:
+        if answer == None:
             return
 
+        txs = []
         tx_size = p.calcsize('=%s' % p.F_TRANSACTION)
         block_size = p.calcsize('=%s' % p.F_HASH)
-        txs_buffer_size = self.response.size - block_size
+        txs_buffer_size = self._handler.response.size - block_size
 
         r_block_hash = self._handler.recv_into('BlockHash')
 
