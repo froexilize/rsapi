@@ -20,12 +20,11 @@ class apiClient(object):
         self.public_key = pub_key
         self.private_key = pr_key
 
-
     def get_counters(self):
         if not self._handler.is_connected():
             return
 
-        r_counters = self._handler.method(h.PROTO_TYPE['Counters'])
+        r_counters = self._handler.method(type=h.PROTO_TYPE['Counters'])
         if r_counters == None:
             return
 
@@ -37,7 +36,7 @@ class apiClient(object):
         if not self._handler.is_connected():
             return
 
-        r_block_hash = self._handler.method(h.PROTO_TYPE['LastHash'])
+        r_block_hash = self._handler.method(type=h.PROTO_TYPE['LastHash'])
 
         block = s.Block()
         block.set_hash(r_block_hash.get_hash())
@@ -83,7 +82,7 @@ class apiClient(object):
     def get_blocks(self, offset, limit):
         if not self._handler.is_connected():
             return
-        self.request = proto.GetBlocks(offset, limit)
+        self.request = p.GetBlocks(offset, limit)
         self.send_data()
 
         if self.recv_data('SendBlocks') != True:
@@ -92,12 +91,12 @@ class apiClient(object):
         blocks = []
         if self.response.size == 0:
             return blocks
-        block_size = proto.calcsize(proto.F_HASH)
+        block_size = p.calcsize(p.F_HASH)
         if self.response.size % block_size == 0:
             return blocks
         blocks_count = int(self.response.size / block_size)
         for b in range(0, blocks_count):
-            block_hash = proto.BlockHash()
+            block_hash = p.BlockHash()
             self.sock.recv_into(block_hash.buffer, block_hash.structure.size)
             block_hash.unpack()
             block = s.Block()
@@ -109,16 +108,13 @@ class apiClient(object):
     def get_transaction(self, b_hash, t_hash):
         if not self._handler.is_connected():
             return None
-        self.request = proto.GetTransaction(b_hash, t_hash)
-        self.send_data()
-        if not self.response.check_cmd_num('SendTransaction'):
-            return
+        result = self._handler.method(b_hash,t_hash,
+                                      type=p.CMD_NUMS['GetTransaction'])
 
         #TODO parse here
 
         t = s.Transaction()
         return t
-
 
     def send_info(self, key):
         if not self._handler.is_connected():
@@ -134,7 +130,7 @@ class apiClient(object):
         if not self._handler.is_connected():
             return
 
-        balance = self._handler.method(p.CMD_NUMS['GetBalance'])
+        balance = self._handler.method(type=p.CMD_NUMS['GetBalance'])
         if balance == None:
             return None
 
@@ -147,8 +143,8 @@ class apiClient(object):
         if not self._handler.is_connected():
             return
 
-
-        txs = self._handler.method(p.CMD_NUMS['GetTransactionsByKey'])
+        txs = self._handler.method(offset,limit,
+                                   type=p.CMD_NUMS['GetTransactionsByKey'])
 
         if txs == None:
             return
@@ -157,19 +153,14 @@ class apiClient(object):
         block_size = p.calcsize('=%s' % p.F_HASH)
         txs_buffer_size = self.response.size - block_size
 
-        r_block_hash = p.BlockHash()
-        self.sock.recv_into(r_block_hash.buffer, r_block_hash.structure.size)
-        r_block_hash.unpack()
+        r_block_hash = self._handler.recv_into('BlockHash')
 
         if txs_buffer_size % tx_size > 0:
             return None
         txs_count = int(txs_buffer_size / tx_size)
 
         for i in range(0, txs_count):
-            #TODO method recv_into
-            tx = p.Transaction()
-            self.sock.recv_into(tx.buffer, tx.structure.size)
-            tx.unpack()
+            tx = self._handler.recv_into('Transaction')
             t = s.Transaction()
             t.parse(tx.values)
             txs.append(t)
@@ -192,11 +183,12 @@ class apiClient(object):
             return False
 
 
-        t = self._signer.transaction(self.private_key,
+        t = signer.transaction(self.private_key,
                                       self.public_key,
                                       target,intg,frac)
 
-        resp_term = self._connector.method(p.CMD_NUMS['CommitTransaction'],t)
+        resp_term = self._handler.method(t,'wtf',
+                                         type=p.CMD_NUMS['CommitTransaction'])
 
         return True
 

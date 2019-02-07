@@ -37,16 +37,16 @@ def load_keys(key_dir = None):
 
 
 class TestClient(unittest.TestCase):
-    key_dir = '../keys/'
+    key_dir = '../keys1/'
 
     def __init__(self, *args, **kwargs):
         super(TestClient, self).__init__(*args, **kwargs)
-        self.host = '95.84.138.232'
+        self.host = '10.0.0.61'
         self.port = 38101
 
         self.test_client = rsapi.apiClient()
-        #self.key1, self.key2 = load_keys(self.key_dir)
-        #self.test_client.set_keys(self.key1,self.key2)
+        self.key1, self.key2 = load_keys(self.key_dir)
+        self.test_client.set_keys(self.key1,self.key2)
 
 
     def setUp(self):
@@ -61,6 +61,7 @@ class TestClient(unittest.TestCase):
     def test_get_balance(self):
         amount = self.test_client.get_balance()
 
+        print(amount.integral)
         self.assertIsNotNone(self.test_client.response)
         if self.test_client.response is not None:
             self.assertTrue(self.test_client.response.check())
@@ -155,7 +156,7 @@ class TestClient(unittest.TestCase):
 
         print(len(txs))
 
-    #@unittest.skip("get_fee")
+    @unittest.skip("get_fee")
     def test_get_fee(self):
         test_key = load_pub_key(self.key_dir)
         # test_key = (b'c1c02d12cdadbc73da73cbd9985b2a41ffdb8dba9de470eaab453cc3595'
@@ -183,21 +184,22 @@ class TestClient(unittest.TestCase):
         self.assertTrue(True)
 
 
-    @unittest.skip("SendTransation")
+    #@unittest.skip("SendTransation")
     def test_send_transaction(self):
         self.test_client.send_info(self.key1)
+        amount = self.test_client.get_balance()
+
 
         target = self.key1
-        integral = 100
+        integral = 1
         fraction = 0
-
-
-        ok = self.test_client.send_transaction(target,
+        if amount > integral:
+            ok = self.test_client.send_transaction(target,
                                                integral,
                                                fraction)
 
-        self.assertIsNotNone(self.test_client.response)
-        self.assertTrue(self.test_client.response.check())
+        self.assertIsNotNone(self.test_client._handler.response)
+        #self.assertTrue(self.test_client._handler.response.check())
 
 if __name__ == '__main__':
     unittest.main()
