@@ -124,7 +124,7 @@ class apiClient(object):
         if not self._handler.is_connected():
             return False
 
-        resp_key = self._handler.method(p.CMD_NUMS['GetInfo'])
+        resp_key = self._handler.method(key, 'wtf', type=p.CMD_NUMS['GetInfo'])
         if resp_key == None:
             return None
 
@@ -180,7 +180,7 @@ class apiClient(object):
         if not self._handler.is_connected():
             return False
 
-        fee = self._handler.method(p.CMD_NUMS['GetFee'])
+        fee = self._handler.method(amount,'wft',type=p.CMD_NUMS['GetFee'])
 
         _amount = s.Amount()
         _amount.set_amount(fee.integral, fee.fraction)

@@ -157,10 +157,10 @@ class TestClient(unittest.TestCase):
 
     #@unittest.skip("get_fee")
     def test_get_fee(self):
-        #test_key = load_pub_key(self.key_dir)
-        test_key = (b'c1c02d12cdadbc73da73cbd9985b2a41ffdb8dba9de470eaab453cc3595'
-                   b'eaead')
-        test_key = binascii.unhexlify(test_key)
+        test_key = load_pub_key(self.key_dir)
+        # test_key = (b'c1c02d12cdadbc73da73cbd9985b2a41ffdb8dba9de470eaab453cc3595'
+        #            b'eaead')
+        # test_key = binascii.unhexlify(test_key)
         temp = rsapi.Amount()
         temp.integral = 1000
         temp.fraction = 0
@@ -176,8 +176,10 @@ class TestClient(unittest.TestCase):
 
     @unittest.skip("send_info")
     def test_send_info(self):
-        resp_key = self.test_client.send_info(self.key1)
-        print(binascii.hexlify(resp_key))
+        test_key = load_pub_key(self.key_dir)
+        resp_key = self.test_client.send_info(test_key)
+        if not resp_key == None:
+            print(binascii.hexlify(resp_key.values[0]))
         self.assertTrue(True)
 
 

@@ -47,16 +47,17 @@ def _createGetProto(type, *args):
         if len(args) != 3:
             return _proto
         _proto = proto.GetTransactions(args)
-    elif type == proto.CMD_NUMS['GetTransactionByKey']:
+    elif type == proto.CMD_NUMS['GetTransactionsByKey']:
         if len(args) != 2:
             return _proto
         _proto = proto.GetTransactionsByKey(args)
-    elif type == proto.CMD_NUMS['GetTerminatingBlock']:
-        _proto = proto.TerminatingBlock()
+    # elif type == proto.CMD_NUMS['TerminatingBlock']:
+    #     _proto = proto.TerminatingBlock()
     elif type == proto.CMD_NUMS['GetFee']:
         if len(args) != 1:
             return _proto
-        _proto = proto.GetFee(args)
+        amount, wft = args[0]
+        _proto = proto.GetFee(amount)
     elif type == proto.CMD_NUMS['CommitTransaction']:
         if len(args) != 1:
             return _proto
@@ -64,13 +65,14 @@ def _createGetProto(type, *args):
     elif type == proto.CMD_NUMS['GetInfo']:
         if len(args) != 1:
             return _proto
-        _proto = proto.GetInfo(args)
+        key,wft= args[0]
+        _proto = proto.GetInfo(key)
     return _proto
 
 def _createStruct(type):
     _s = None
     if type == proto.CMD_NUMS['GetFee']:
-        _s = s.Amount()
+        _s = proto.Balance()
     elif type == proto.CMD_NUMS['GetInfo']:
         _s = proto.PublicKey()
     return _s
@@ -126,7 +128,8 @@ class Connector(object):
             self.sock.recv_into(self.response.buffer,
                                 self.response.structure.size)
         self.response.unpack()
-        if not self.response.check_cmd_num(cmd):
+        print('my cmd is',self.response.cmd_num)
+        if not self.response.cmd_num == cmd:
             return False
         return True
 
@@ -136,7 +139,7 @@ class Connector(object):
         if _s == None:
             print('Error to create Proto')
             return
-        self.sock.recv_into(proto.buffer,proto.structure.size)
+        self.sock.recv_into(_s.buffer,_s.structure.size)
         _s.unpack()
 
         resp_block = proto.TerminatingBlock()
@@ -149,11 +152,12 @@ class Connector(object):
         self.request = _createGetProto(type,argc)
         if self.request == None:
             print('Error to create request')
-            return
+            return None
         self.send_data()
         cmd = type+1
         if type == proto.CMD_NUMS['CommitTransaction']:
             cmd += 1
+
         ok = self.recv_cmd(cmd)
         if not ok:
             print('Error to check cmd')
