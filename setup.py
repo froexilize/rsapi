@@ -5,13 +5,13 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
      name='rsapi',
-     version='0.1',
+     version='0.1.5',
      author="Rasmart team",
      author_email="rasmarutil@gmail.com",
-     description="api impl  on python3",
+     description="api impl on python3",
      long_description=long_description,
      long_description_content_type="text/markdown",
-     url="https://github.com/rasmartguy/ra-api",
+     url="https://github.com/rasmartguy/rsapi",
      packages=setuptools.find_packages(),
      classifiers=[
          "Programming Language :: Python :: 3",

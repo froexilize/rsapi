@@ -31,7 +31,6 @@ class Transaction(object):
         self.receiver_public = None
         self.amount = Amount()
         self.currency = None
-
         self.salt = None
 
     def parse(self, proto_transaction_values):

@@ -97,17 +97,17 @@ class PublicKey(Proto):
     def unpack(self):
         self.values = self.structure.unpack_from(self.buffer.raw, 0)
 
-class TransactionData(Proto):
+class Transaction(Proto):
     def __init__(self):
-        self.structure = struct.Struct('=%s' % (F_DATA))
+        self.structure = struct.Struct('=%s' % (F_TRANSACTION))
         self.create_buffer()
 
     def unpack(self):
         self.values = self.structure.unpack_from(self.buffer.raw, 0)
 
-class Transaction(Proto):
+class TransactionData(Proto):
     def __init__(self):
-        self.structure = struct.Struct('=%s' % (F_TRANSACTION))
+        self.structure = struct.Struct('=%s' % (F_DATA))
         self.create_buffer()
 
     def unpack(self):
@@ -256,7 +256,6 @@ class GetInfo(Proto):
         )
         self.pack()
 
-
 class GetTransactionsByKey(Proto):
     def __init__(self, offset, limit):
         self.cmd_num = CMD_NUMS['GetTransactionsByKey']
@@ -273,7 +272,6 @@ class GetTransactionsByKey(Proto):
 
 class GetInfo(Proto):
     def __init__(self,key):
-
         self.cmd_num = CMD_NUMS['GetInfo']
         self.structure = struct.Struct('=%s %s' % (F_HEADER,F_PUB_KEY))
         self.create_buffer()
@@ -283,7 +281,6 @@ class GetInfo(Proto):
             binascii.unhexlify(key)
         )
         self.pack()
-
 
 class GetFee(Proto):
     def __init__(self,amount):
@@ -306,13 +303,13 @@ class SendTransaction(Proto):
         self.values = (
             self.cmd_num,
             188,
-            binascii.unhexlify(t.hash_hex),
+            t.hash_hex,
             binascii.unhexlify(t.sender_public),
             binascii.unhexlify(t.receiver_public),
             t.amount.integral,
             t.amount.fraction,
             self.currency,
-            binascii.unhexlify(t.hash_hex)
+            t.salt
         )
         self.pack()
 
