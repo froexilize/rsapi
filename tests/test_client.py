@@ -41,12 +41,12 @@ class TestClient(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super(TestClient, self).__init__(*args, **kwargs)
-        self.host = '10.0.0.61'
+        self.host = '95.84.138.232'
         self.port = 38101
 
         self.test_client = rsapi.apiClient()
         self.key1, self.key2 = load_keys(self.key_dir)
-        self.test_client.set_keys(self.key1,self.key2)
+        self.test_client.set_keys(self.key1, self.key2)
 
 
     def setUp(self):
