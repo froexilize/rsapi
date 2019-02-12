@@ -188,9 +188,12 @@ class apiClient(object):
 
         t = signer.transaction(self.private_key,
                                       self.public_key,
-                                      target,intg,frac)
+                                      target,
+                                      intg,
+                                      frac)
 
-        resp_term = self._handler.method(t,'wtf',
+        resp_term = self._handler.method(t,
+                                         'wtf',
                                          type=p.CMD_NUMS['CommitTransaction'])
 
         return True
