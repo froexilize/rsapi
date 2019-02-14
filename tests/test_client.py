@@ -37,7 +37,7 @@ def load_keys(key_dir = None):
 
 
 class TestClient(unittest.TestCase):
-    key_dir = '../keys1/'
+    key_dir = '../keys/'
 
     def __init__(self, *args, **kwargs):
         super(TestClient, self).__init__(*args, **kwargs)
@@ -186,12 +186,17 @@ class TestClient(unittest.TestCase):
 
     @unittest.skip("SendTransation")
     def test_send_transaction(self):
+
+        test_key = (b'4b335fb3f5fe4669fa2bc7b384d68c377f4e4c1fec878e82bd09158ddb'
+                    b'0c77f2')
+        #test_key = binascii.unhexlify(test_key)
+
         self.test_client.send_info(self.key1)
 
         amount = self.test_client.get_balance()
 
         target = self.key1
-        integral = 1
+        integral = 761
         fraction = 0
 
         if amount.integral > integral:
@@ -201,6 +206,7 @@ class TestClient(unittest.TestCase):
 
         self.assertIsNotNone(self.test_client._handler.response)
         #self.assertTrue(self.test_client._handler.response.check())
+
 
 if __name__ == '__main__':
     unittest.main()

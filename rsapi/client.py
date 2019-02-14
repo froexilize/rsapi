@@ -221,8 +221,7 @@ class apiClient(object):
             return False
 
         t = signer.transaction(self.private_key,
-                               self.public_key,
-                               target, intg, frac)
+
 
         answer = self._handler.method(t,
                                       'wtf',
