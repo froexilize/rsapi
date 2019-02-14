@@ -15,7 +15,7 @@ class apiClient(object):
     def __init__(self):
         self._handler = h.Connector()
 
-    # wtf method
+
     def set_keys(self,
                  pub_key,
                  pr_key):
@@ -98,20 +98,9 @@ class apiClient(object):
         if not self._handler.is_connected():
             return
 
-        # self.request = p.GetBlocks(offset, limit)
-        # self.send_data()
-        #
-        # if self._handler.recv_data('SendBlocks') is not True:
-        #     return
-        #
         blocks = []
-        # if self._handler.response.size is 0:
-        #     return blocks
-        #
-        block_size = p.calcsize(p.F_HASH)
-        # if self.response.size % block_size is 0:
-        #     return blocks
 
+        block_size = p.calcsize(p.F_HASH)
 
         blocks_count = int(self._handler.response.size / block_size)
         for b in range(0, blocks_count):
