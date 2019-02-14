@@ -68,7 +68,7 @@ class TestClient(unittest.TestCase):
             self.assertEqual(amount.integral, 4200000000)
             self.assertEqual(amount.fraction, 0)
 
-    #@unittest.skip("GetCounters")
+    @unittest.skip("GetCounters")
     def test_get_counters(self):
         counters = self.test_client.get_counters()
 
@@ -135,7 +135,7 @@ class TestClient(unittest.TestCase):
         self.assertTrue(self.test_client.response.check())
         self.assertIsInstance(t,rsapi.Transaction)
 
-    #@unittest.skip("transactionsbykey")
+    @unittest.skip("transactionsbykey")
     def test_get_transactionsbykey(self):
         offset = 0
         limit = 1
@@ -156,7 +156,7 @@ class TestClient(unittest.TestCase):
 
         print(len(txs))
 
-    #@unittest.skip("get_fee")
+    @unittest.skip("get_fee")
     def test_get_fee(self):
         #test_key = load_pub_key(self.key_dir)
         # test_key = (b'c1c02d12cdadbc73da73cbd9985b2a41ffdb8dba9de470eaab453cc3595'

@@ -149,8 +149,8 @@ class Connector(object):
         return _s
 
     def method(self, *argc, _type):
-        self.proto = _createGetProto(_type, argc)
-        if self.proto == None:
+        self.request = _createGetProto(_type, argc)
+        if self.request == None:
             print('Error to create request')
             return None
 
@@ -163,6 +163,6 @@ class Connector(object):
         if not ok:
             print('Error to check cmd')
             return None
-        result = self._createStruct(type)
+        result = self._createStruct(_type)
 
         return result
