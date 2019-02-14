@@ -41,12 +41,12 @@ class TestClient(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super(TestClient, self).__init__(*args, **kwargs)
-        self.host = '10.0.0.61'
+        self.host = '95.84.138.232'
         self.port = 38101
 
         self.test_client = rsapi.apiClient()
         self.key1, self.key2 = load_keys(self.key_dir)
-        self.test_client.set_keys(self.key1,self.key2)
+        self.test_client.set_keys(self.key1, self.key2)
 
 
     def setUp(self):
@@ -57,26 +57,26 @@ class TestClient(unittest.TestCase):
         self.test_client._handler.disconnect()
 
 
-    @unittest.skip("GetBalance")
+    #@unittest.skip("GetBalance")
     def test_get_balance(self):
+        self.test_client.send_info(self.key1)
         amount = self.test_client.get_balance()
 
-        print(amount.integral)
-        self.assertIsNotNone(self.test_client.response)
-        if self.test_client.response is not None:
-            self.assertTrue(self.test_client.response.check())
-            self.assertEqual(amount.integral, 32768)
-            self.assertEqual(amount.fraction, 10)
+        self.assertIsNotNone(self.test_client._handler.response)
+        if self.test_client._handler.response is not None:
+            self.assertTrue(self.test_client._handler.response.check())
+            self.assertEqual(amount.integral, 4200000000)
+            self.assertEqual(amount.fraction, 0)
 
-    @unittest.skip("GetCounters")
+    #@unittest.skip("GetCounters")
     def test_get_counters(self):
         counters = self.test_client.get_counters()
 
-        self.assertIsNotNone(self.test_client.response)
-        self.assertTrue(self.test_client.response.check())
+        self.assertIsNotNone(self.test_client._handler.response)
+        self.assertTrue(self.test_client._handler.response.check())
         self.assertIsInstance(counters, rsapi.Counters)
-        self.assertEqual(counters.blocks, 250)
-        self.assertEqual(counters.transactions, 123456)
+        self.assertEqual(counters.blocks, 1)
+        self.assertEqual(counters.transactions, 1)
 
     @unittest.skip("GetLastHash")
     def test_get_last_hash(self):
@@ -135,30 +135,30 @@ class TestClient(unittest.TestCase):
         self.assertTrue(self.test_client.response.check())
         self.assertIsInstance(t,rsapi.Transaction)
 
-    @unittest.skip("transactionsbykey")
+    #@unittest.skip("transactionsbykey")
     def test_get_transactionsbykey(self):
         offset = 0
-        limit = 7931
+        limit = 1
 
         test_key = load_pub_key(self.key_dir)
 
         self.test_client.send_info(test_key)
         txs = self.test_client.get_transactionsbykey(offset, limit)
 
-        self.assertIsNotNone(self.test_client.response)
-        self.assertTrue(self.test_client.response.check())
+        self.assertIsNotNone(self.test_client._handler.response)
+        self.assertTrue(self.test_client._handler.response.check())
 
         print("Get transactions:")
-        # for tx in txs:
-        #     print(tx.hash_hex)
-        #     print(vars(tx))
-        #     print(vars(tx.amount))
+        for tx in txs:
+            print(tx.hash_hex)
+            print(vars(tx))
+            print(vars(tx.amount))
 
         print(len(txs))
 
-    @unittest.skip("get_fee")
+    #@unittest.skip("get_fee")
     def test_get_fee(self):
-        test_key = load_pub_key(self.key_dir)
+        #test_key = load_pub_key(self.key_dir)
         # test_key = (b'c1c02d12cdadbc73da73cbd9985b2a41ffdb8dba9de470eaab453cc3595'
         #            b'eaead')
         # test_key = binascii.unhexlify(test_key)
@@ -166,7 +166,7 @@ class TestClient(unittest.TestCase):
         temp.integral = 1000
         temp.fraction = 0
 
-        self.test_client.send_info(test_key)
+        #self.test_client.send_info(test_key)
         fee = self.test_client.get_fee(temp)
 
 
@@ -184,7 +184,7 @@ class TestClient(unittest.TestCase):
         self.assertTrue(True)
 
 
-    #@unittest.skip("SendTransation")
+    @unittest.skip("SendTransation")
     def test_send_transaction(self):
 
         test_key = (b'4b335fb3f5fe4669fa2bc7b384d68c377f4e4c1fec878e82bd09158ddb'
@@ -192,9 +192,8 @@ class TestClient(unittest.TestCase):
         #test_key = binascii.unhexlify(test_key)
 
         self.test_client.send_info(self.key1)
-        amount = self.test_client.get_balance()
 
-        print(amount.integral)
+        amount = self.test_client.get_balance()
 
         target = self.key1
         integral = 761

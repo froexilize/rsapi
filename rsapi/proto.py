@@ -215,7 +215,7 @@ class GetTransactions(Proto):
         self.create_buffer()
         self.values = (
             self.cmd_num,
-            74,
+            72,
             binascii.unhexlify(block_hash),
             offset,
             limit
@@ -227,7 +227,11 @@ class GetBlocks(Proto):
         self.cmd_num = CMD_NUMS['GetBlocks']
         self.structure = struct.Struct('=%s %s' % (F_HEADER, F_BLOCKS))
         self.create_buffer()
-        self.values = (self.cmd_num, 10, offset, limit)
+        self.values = (self.cmd_num,
+                       #WTF?? Why size it 10??
+                       8,
+                       offset,
+                       limit)
         self.pack()
 
 class GetTransaction(Proto):
