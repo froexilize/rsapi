@@ -41,7 +41,7 @@ class TestClient(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super(TestClient, self).__init__(*args, **kwargs)
-        self.host = '95.84.138.232'
+        self.host = '10.0.0.61'
         self.port = 38101
 
         self.test_client = rsapi.apiClient()
@@ -184,18 +184,17 @@ class TestClient(unittest.TestCase):
         self.assertTrue(True)
 
 
-    @unittest.skip("SendTransation")
+    #@unittest.skip("SendTransation")
     def test_send_transaction(self):
 
         test_key = (b'4b335fb3f5fe4669fa2bc7b384d68c377f4e4c1fec878e82bd09158ddb'
                     b'0c77f2')
-        #test_key = binascii.unhexlify(test_key)
 
         self.test_client.send_info(self.key1)
 
         amount = self.test_client.get_balance()
 
-        target = self.key1
+        target = test_key
         integral = 761
         fraction = 0
 

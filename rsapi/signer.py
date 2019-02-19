@@ -19,7 +19,7 @@ def transaction(pr_key,from_key,to_key,intg,frac):
     for it in range(salt_sz):
         t.salt[it] = random.randint(0, 255)
 
-    lib = racrypt.RaCryptLib()
+    lib = racrypt.Crypto()
     lib.load(path.dirname(racrypt.__file__))
 
     buffer = bytearray()
