@@ -45,8 +45,8 @@ class TestClient(unittest.TestCase):
         self.port = 38101
 
         self.test_client = rsapi.apiClient()
-        self.key1, self.key2 = load_keys(self.key_dir)
-        self.test_client.set_keys(self.key1, self.key2)
+        #self.key1, self.key2 = load_keys(self.key_dir)
+        #self.test_client.set_keys(self.key1, self.key2)
 
 
     def setUp(self):
@@ -57,7 +57,7 @@ class TestClient(unittest.TestCase):
         self.test_client._handler.disconnect()
 
 
-    #@unittest.skip("GetBalance")
+    @unittest.skip("GetBalance")
     def test_get_balance(self):
         self.test_client.send_info(self.key1)
         amount = self.test_client.get_balance()
@@ -186,20 +186,24 @@ class TestClient(unittest.TestCase):
 
     #@unittest.skip("SendTransation")
     def test_send_transaction(self):
+        e_pub_key = (b'12cdadbc73da73cbd9985b2a41ffdb8d')
+        e_priv_key = (b'c1c02d12cdadbc73da73cbd9985b2a41ffdb8dba9de470eaab453cc3595'
+                      b'eaead')
 
+        self.test_client.set_keys(e_pub_key, e_priv_key)
         test_key = (b'4b335fb3f5fe4669fa2bc7b384d68c377f4e4c1fec878e82bd09158ddb'
                     b'0c77f2')
 
-        self.test_client.send_info(self.key1)
+        self.test_client.send_info(e_pub_key)
 
         amount = self.test_client.get_balance()
 
         target = test_key
-        integral = 761
+        integral = 4200000000
         fraction = 0
 
-        if amount.integral > integral:
-            ok = self.test_client.send_transaction(target,
+        #if amount.integral > integral:
+        ok = self.test_client.send_transaction(target,
                                                integral,
                                                fraction)
 

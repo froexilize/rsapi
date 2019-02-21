@@ -37,5 +37,9 @@ def transaction(pr_key,from_key,to_key,intg,frac):
         binascii.unhexlify(pr_key),
     )
 
+    print('sign transaction', result)
+    for byte in lib.signature:
+        print(byte)
+
     t.hash_hex = lib.signature
     return t

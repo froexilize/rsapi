@@ -5,7 +5,9 @@ import logging
 import socket
 from . import proto
 
-
+"""
+    Create proto structure
+"""
 def _createGetProto(type, *args):
     _proto = None
     if type == proto.CMD_NUMS['GetBalance']:
@@ -52,7 +54,9 @@ def _createGetProto(type, *args):
         _proto = proto.GetInfo(key)
     return _proto
 
-
+"""
+    create answer 
+"""
 def _createStruct(type):
     _s = None
     if type == proto.CMD_NUMS['GetFee']:
@@ -68,14 +72,16 @@ def _createStruct(type):
     return _s
 
 
+
 class Connector(object):
     host = '127.0.0.1'
     port = 38100
+    sock_timeout = 100
     connected = False
-    sock_timeout = 1000
     request = None
     response = None
-    proto = None
+    functator = None
+
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if self.sock_timeout is not None:
@@ -83,6 +89,7 @@ class Connector(object):
 
     def __del__(self):
         self.disconnect()
+
 
     def connect(self, host=None, port=None):
         if host is not None:
@@ -92,8 +99,9 @@ class Connector(object):
         server_address = (self.host, self.port)
         try:
             self.sock.connect(server_address)
-            # self.send_info(self.public_key)
             self.connected = True
+
+        #Specify type of error
         except Exception as e:
             logging.error(str(e))
 
@@ -107,11 +115,21 @@ class Connector(object):
         logging.error("no connection")
         return False
 
+    #fixed timeout
     def send_data(self):
-        self.sock.sendall(self.request.buffer.raw)
-        req_term = proto.TerminatingBlock()
-        req_term.pack()
-        self.sock.sendall(req_term.buffer.raw)
+        try:
+            self.sock.sendall(self.request.buffer.raw)
+            req_term = proto.TerminatingBlock()
+            req_term.pack()
+            self.sock.sendall(req_term.buffer.raw)
+        except:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            if self.sock_timeout is not None:
+                self.sock.settimeout(self.sock_timeout)
+            host = (self.host, self.port)
+            self.sock.connect(host)
+            self.send_data()
+
 
     def recv_cmd(self, cmd):
         self.response = proto.Header()
