@@ -15,7 +15,6 @@ class apiClient(object):
     def __init__(self):
         self._handler = h.Connector()
 
-
     def set_keys(self,
                  pub_key,
                  pr_key):
@@ -27,7 +26,8 @@ class apiClient(object):
             return
 
         r_counters = self._handler.method(
-                                    _type=p.CMD_NUMS['GetCounters'])
+                                    _type=p.CMD_NUMS['GetCounters'],
+                                    term_block=True)
         if r_counters is None:
             return
 
@@ -41,7 +41,8 @@ class apiClient(object):
             return
 
         r_block_hash = self._handler.method(
-                                _type=p.CMD_NUMS['GetLastHash'])
+                                _type=p.CMD_NUMS['GetLastHash'],
+                                term_block=True)
 
         block = s.Block()
         block.set_hash(r_block_hash.get_hash())
@@ -51,9 +52,18 @@ class apiClient(object):
         if not self._handler.is_connected():
             return
 
-        block_size = self._handler.method(block_hash,
-                                          _type = p.CMD_NUMS['GetBlockSize'])
-        block_size = block_size.values[0]
+        block_hash = self._handler.method(block_hash,
+                                          'wtf',
+                                          _type=p.CMD_NUMS['GetBlockSize'],
+                                          term_block=False)
+        import binascii
+        print(binascii.hexlify(block_hash.get_hash()))
+
+        if block_hash is None:
+            return
+
+
+        block_size = self._handler.recv_into('BlockSize').values[0]
 
         return block_size
 
@@ -64,33 +74,35 @@ class apiClient(object):
         if not self._handler.is_connected():
             return
 
-        txs_list = self._handler.method(block_hash,
+        block_hash = self._handler.method(block_hash,
+                                        'wft',
                                         offset,
                                         limit,
-                                        _type=p.CMD_NUMS['GetTransactions'])
+                                        _type=p.CMD_NUMS['GetTransactions'],
+                                        term_block=False)
 
-        tx_size = p.calcsize('=%s' % p.F_TRANSACTION)
-        block_size = p.calcsize('=%s' % p.F_HASH)
-        txs_list_size = self.response.size - block_size
 
-        r_block_hash = p.BlockHash()
-        self.sock.recv_into(r_block_hash.buffer,
-                            r_block_hash.structure.size)
-        r_block_hash.unpack()
+        txs_list = []
 
-        if txs_list_size % tx_size > 0:
+        hash_size = 64
+        txs_list_size = self._handler.response.size - hash_size
+
+        if txs_list_size % hash_size > 0:
             return txs_list
-
-        txs_count = int(txs_list_size / tx_size)
+        txs_count = int(txs_list_size / hash_size)
+        print(txs_count)
         for i in range(0, txs_count):
-            tx = self._connector.recv('Transaction')
-            if tx is None:
+            hash = self._handler.recv_into('BlockHash')
+            if hash is None:
                 return
-            t = s.Transaction()
-            t.parse(tx.values)
-            txs_list.append(t)
+
+            hash = hash.get_hash()
+            txs_list.append(hash)
+
+        self._handler.recv_term_block()
 
         return txs_list
+
 
     def get_blocks(self,
                    offset,
@@ -98,11 +110,16 @@ class apiClient(object):
         if not self._handler.is_connected():
             return
 
+
+        self._handler.method(offset,
+                             limit,
+                             _type=p.CMD_NUMS['GetBlocks'],
+                                    term_block=True)
+
         blocks = []
-
         block_size = p.calcsize(p.F_HASH)
-
         blocks_count = int(self._handler.response.size / block_size)
+
         for b in range(0, blocks_count):
             block_hash = self._handler.recv_into('BlockHash')
             block = s.Block()
@@ -111,17 +128,20 @@ class apiClient(object):
             
         return blocks
 
-    # TODO issue on Github
     def get_transaction(self,
                         b_hash,
                         t_hash):
         if not self._handler.is_connected():
             return None
-        # HOW TO WORKS this method
 
-        tx = self._handler.method(b_hash,
+        bloch_hash = self._handler.method(b_hash,
                                   t_hash,
-                                  _type=p.CMD_NUMS['GetTransaction'])
+                                  _type=p.CMD_NUMS['GetTransaction'],
+                                    term_block=False)
+
+        print(bloch_hash.get_hash())
+
+        tx = self._handler.recv_into('Transaction')
 
         t = s.Transaction()
         t.parse(tx.values)
@@ -136,7 +156,8 @@ class apiClient(object):
         # TODO to be able parse single Python tuple
         resp_key = self._handler.method(key,
                                         'wtf',
-                                        _type=p.CMD_NUMS['GetInfo'])
+                                        _type=p.CMD_NUMS['GetInfo'],
+                                        term_block=True)
         if resp_key is None:
             return None
 
@@ -147,7 +168,8 @@ class apiClient(object):
             return
 
         balance = self._handler.method(
-            _type=p.CMD_NUMS['GetBalance'])
+                _type=p.CMD_NUMS['GetBalance'],
+                term_block=True)
         if balance is None:
             return None
 
@@ -165,7 +187,8 @@ class apiClient(object):
 
         answer = self._handler.method(offset,
                                       limit,
-                                      _type=p.CMD_NUMS['GetTransactionsByKey'])
+                                      _type=p.CMD_NUMS['GetTransactionsByKey'],
+                                      term_block=False)
 
         if answer is None:
             return
@@ -175,7 +198,7 @@ class apiClient(object):
         block_size = p.calcsize('=%s' % p.F_HASH)
         txs_buffer_size = self._handler.response.size - block_size
 
-        r_block_hash = self._handler.recv_into('BlockHash')
+        #r_block_hash = self._handler.recv_into('BlockHash')
 
         if txs_buffer_size % tx_size > 0:
             return None
@@ -196,7 +219,8 @@ class apiClient(object):
 
         fee = self._handler.method(amount,
                                    'wft',
-                                   _type=p.CMD_NUMS['GetFee'])
+                                   _type=p.CMD_NUMS['GetFee'],
+                                    term_block=True)
 
         _amount = s.Amount()
         _amount.set_amount(fee.integral, fee.fraction)
@@ -218,6 +242,7 @@ class apiClient(object):
 
         answer = self._handler.method(t,
                                       'wtf',
-                                      _type=p.CMD_NUMS['CommitTransaction'])
+                                      _type=p.CMD_NUMS['CommitTransaction'],
+                                      term_block=True)
 
         return True
