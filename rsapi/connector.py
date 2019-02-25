@@ -134,13 +134,18 @@ class Connector(object):
 
     #TODO try expect block
     def recv_cmd(self, cmd):
-        self.response = proto.Header()
-        if self.response.structure.size != 0:
-            self.sock.recv_into(self.response.buffer,
-                                self.response.structure.size)
-        self.response.unpack()
-        if not self.response.cmd_num == cmd:
-            return False
+        try:
+            self.response = proto.Header()
+            if self.response.structure.size != 0:
+                self.sock.recv_into(self.response.buffer,
+                                    self.response.structure.size)
+            self.response.unpack()
+            if not self.response.cmd_num == cmd:
+                return False
+
+        except Exception:
+            print('')
+
         return True
 
     def recv_into(self, type):
