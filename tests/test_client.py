@@ -10,7 +10,7 @@ from tests.utils import *
 
 
 class TestClient(unittest.TestCase):
-    key_dir = '../keys/'
+    key_dir = 'test_keys/'
 
     def __init__(self, *args, **kwargs):
         super(TestClient, self).__init__(*args, **kwargs)
