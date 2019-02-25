@@ -34,6 +34,11 @@ class Transaction(object):
         self.salt = None
 
     def parse(self, proto_transaction_values):
+        for value in proto_transaction_values:
+            if not isinstance(value, int):
+                print(binascii.hexlify(value))
+            else:
+                print(value)
         self.hash_hex = binascii.hexlify(proto_transaction_values[0])
         self.sender_public = binascii.hexlify(proto_transaction_values[1])
         self.receiver_public = binascii.hexlify(proto_transaction_values[2])
@@ -42,7 +47,7 @@ class Transaction(object):
             fraction=proto_transaction_values[4]
         )
         #if proto_transaction_values != None:
-           # self.currency = proto_transaction_values[5].decode("utf-8").rstrip('\0')
+           #self.currency = proto_transaction_values[5].decode("utf-8").rstrip('\0')
 
 class Block(object):
     def __init__(self):

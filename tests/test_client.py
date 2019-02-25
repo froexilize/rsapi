@@ -41,7 +41,7 @@ class TestClient(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super(TestClient, self).__init__(*args, **kwargs)
-        self.host = '10.0.0.61'
+        self.host = '95.84.138.232'
         self.port = 38101
 
         self.test_client = rsapi.apiClient()
@@ -57,7 +57,7 @@ class TestClient(unittest.TestCase):
         self.test_client._handler.disconnect()
 
 
-    #@unittest.skip("GetBalance")
+    @unittest.skip("GetBalance")
     def test_get_balance(self):
         self.test_client.send_info(self.key1)
         amount = self.test_client.get_balance()
@@ -88,52 +88,71 @@ class TestClient(unittest.TestCase):
             self.assertEqual(len(last_hash.hash), 64)
             self.assertEqual(len(last_hash.hash_hex), 128)
 
-    @unittest.skip("GetBlockSize")
+    #@unittest.skip("GetBlockSize")
     def test_get_block_size(self):
-        block_hash = (b'c1c02d12cdadbc73da73cbd9985b2a41ffdb8dba9de470eaab453cc'
-                      b'3595eab31f84bbe0766aea98b7ab5487eb5f962fc9c3ed6b6119600'
-                      b'428d55bad383be5020')
-        block_size = self.test_client.get_block_size(block_hash)
+        b_hash = b'6ba4295e07484597caf7722b59c6206fc6735a0d521927b3f556650a073ff12680d24b3aaa51db' \
+                 b'f2096eccaeca8e323e9813cfce2f929881f47b9eac136ae85b'
 
-        self.assertIsNotNone(self.test_client.response)
-        if self.test_client.response is not None:
-            self.assertTrue(self.test_client.response.check())
-            self.assertEqual(block_size, 123456)
+        block_size = self.test_client.get_block_size(b_hash)
 
-    @unittest.skip("GetTransactions")
-    def test_get_transactions(self):
-        block_hash = (b'c1c02d12cdadbc73da73cbd9985b2a41ffdb8dba9de470eaab453cc'
-                      b'3595eab31f84bbe0766aea98b7ab5487eb5f962fc9c3ed6b6119600'
-                      b'428d55bad383be5020')
-        offset = 2
-        limit = 5
-        txs = self.test_client.get_transactions(block_hash, offset, limit)
+        self.assertIsNotNone(self.test_client._handler.response)
+        if self.test_client._handler.response is not None:
+            self.assertTrue(self.test_client._handler.response.check())
+            self.assertEqual(block_size, 1)
 
-        self.assertIsNotNone(self.test_client.response)
-        self.assertTrue(self.test_client.response.check())
-        self.assertEqual(len(txs), 5)
 
     @unittest.skip("GetBlocks")
     def test_get_blocks(self):
         offset = 0
         limit = 5
-        blocks = self.test_client.get_blocks(offset, limit)
-        self.assertIsNotNone(self.test_client.response)
-        self.assertTrue(self.test_client.response.check())
+        blocks = self.test_client.get_blocks(offset,
+                                             limit)
+
+
+        self.assertIsNotNone(self.test_client._handler.response)
+        self.assertTrue(self.test_client._handler.response.check())
         self.assertGreater(len(blocks), 0)
+
 
     @unittest.skip("GetTransaction")
     def test_get_transaction(self):
-        b_hash = (b'c1c02d12cdadbc73da73cbd9985b2a41ffdb8dba9de470eaab453cc3595'
-                  b'eab31f84bbe0766aea98b7ab5487eb5f962fc9c3ed6b6119600428d55ba'
-                  b'd383be5020')
-        t_hash = (b'c1c02d12cdadbc73da73cbd9985b2a41ffdb8dba9de470eaab453cc3595'
-                  b'eab31f84bbe0766aea98b7ab5487eb5f962fc9c3ed6b6119600428d55ba'
-                  b'd383be5021')
+        self.test_client.send_info(self.key1)
+
+        b_hash = b'6ba4295e07484597caf7722b59c6206fc6735a0d521927b3f556650a073ff12680d24b3aaa51db' \
+                 b'f2096eccaeca8e323e9813cfce2f929881f47b9eac136ae85b'
+
+        t_hash = (b'4C92993FF1A9E2837E8262B721CE9AC46FDE818DC5A53FC7F8F74644EF06EA996C562ACCEF337D57A78AE'
+                  b'00C4FD606362BA514335230A8B33F5903212727AE05')
+
         t = self.test_client.get_transaction(b_hash, t_hash)
-        self.assertIsNotNone(self.test_client.response)
-        self.assertTrue(self.test_client.response.check())
-        self.assertIsInstance(t,rsapi.Transaction)
+
+
+        self.assertIsNotNone(self.test_client._handler.response)
+        self.assertTrue(self.test_client._handler.response.check())
+        self.assertEqual(t.amount.integral, 241)
+        self.assertIsInstance(t, rsapi.Transaction)
+
+
+    #@unittest.skip("GetTransactions")
+    def test_get_transactions(self):
+        b_hash = b'6ba4295e07484597caf7722b59c6206fc6735a0d521927b3f556650a073ff12680d24b3aaa51db' \
+                 b'f2096eccaeca8e323e9813cfce2f929881f47b9eac136ae85b'
+
+        offset = 0
+        limit = 1
+
+        txs = self.test_client.get_transactions(b_hash,
+                                                offset,
+                                               limit)
+
+        print(len(txs))
+
+        self.assertIsNotNone(self.test_client._handler.response)
+        self.assertTrue(self.test_client._handler.response.check())
+
+        self.assertEqual(len(txs), 1)
+
+
 
     @unittest.skip("transactionsbykey")
     def test_get_transactionsbykey(self):
@@ -184,7 +203,7 @@ class TestClient(unittest.TestCase):
         self.assertTrue(True)
 
 
-    #@unittest.skip("SendTransation")
+    @unittest.skip("SendTransation")
     def test_send_transaction(self):
 
         test_key = (b'4b335fb3f5fe4669fa2bc7b384d68c377f4e4c1fec878e82bd09158ddb'

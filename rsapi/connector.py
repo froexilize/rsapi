@@ -4,7 +4,7 @@
 import logging
 import socket
 from . import proto
-
+from rsapi.structs import *
 
 def _createGetProto(type, *args):
     _proto = None
@@ -15,21 +15,25 @@ def _createGetProto(type, *args):
     elif type == proto.CMD_NUMS['GetCounters']:
         _proto = proto.GetCounters()
     elif type == proto.CMD_NUMS['GetBlockSize']:
-        if len(args) != 2:
+        if len(args) != 1:
             return _proto
-        _proto = proto.GetBlockSize(args)
+        hash, wtf = args[0]
+        _proto = proto.GetBlockSize(hash)
     elif type == proto.CMD_NUMS['GetBlocks']:
-        if len(args) != 2:
+        if len(args) != 1:
             return _proto
-        _proto = proto.GetBlocks(args)
+        offset, limit = args[0]
+        _proto = proto.GetBlocks(offset, limit)
     elif type == proto.CMD_NUMS['GetTransaction']:
-        if len(args) != 2:
+        if len(args) != 1:
             return _proto
-        _proto = proto.GetTransaction(args)
+        block_hash,t_hash = args[0]
+        _proto = proto.GetTransaction(block_hash,t_hash)
     elif type == proto.CMD_NUMS['GetTransactions']:
         if len(args) != 1:
             return _proto
-        _proto = proto.GetTransactions(args)
+        b_hash, wtf, offset, limit = args[0]
+        _proto = proto.GetTransactions(b_hash, offset, limit)
     elif type == proto.CMD_NUMS['GetTransactionsByKey']:
         if len(args) != 1:
             return _proto
@@ -52,7 +56,6 @@ def _createGetProto(type, *args):
         _proto = proto.GetInfo(key)
     return _proto
 
-
 def _createStruct(type):
     _s = None
     if type == proto.CMD_NUMS['GetFee']:
@@ -65,6 +68,12 @@ def _createStruct(type):
         _s = proto.Counters()
     elif type == proto.CMD_NUMS['GetTransactionsByKey']:
         _s = proto.Balance()
+    elif type == proto.CMD_NUMS['GetTransaction']:
+        _s = proto.Transaction()
+    elif type == proto.CMD_NUMS['GetTransactions']:
+        _s = proto.Transaction()
+    elif type == proto.CMD_NUMS['GetBlockSize']:
+        _s = proto.BlockSize()
     return _s
 
 

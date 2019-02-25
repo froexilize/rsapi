@@ -50,6 +50,7 @@ CMD_NUMS_MAX = max(CMD_NUMS.values())
 def calcsize(structure):
     return struct.calcsize(structure)
 
+#Protos
 class Proto(object):
     currency = CURRENCY
     structure = None
@@ -99,11 +100,28 @@ class PublicKey(Proto):
 
 class Transaction(Proto):
     def __init__(self):
+        self.hash = b''
+        self.sender = b''
+        self.receiver = b''
+        self.integral = 0
+        self.fraction = 0
+        self.currency = b''
+        self.salt = b''
         self.structure = struct.Struct('=%s' % (F_TRANSACTION))
         self.create_buffer()
 
     def unpack(self):
-        self.values = self.structure.unpack_from(self.buffer.raw, 0)
+        super(Transaction, self).unpack()
+        if len(self.values) > 1:
+            self.hash = self.values[0]
+            self.sender = self.values[1]
+            self.receiver = self.values[2]
+            if isinstance(self.values[3], int):
+                self.integral = self.values[3]
+            if isinstance(self.values[4], int):
+                self.integral = self.values[4]
+            #self.currency = self.values[5]
+            #self.salt = self.values[6]
 
 class TransactionData(Proto):
     def __init__(self):
@@ -175,7 +193,7 @@ class Balance(Proto):
             if isinstance(self.values[1], int):
                 self.fraction = self.values[1]
 
-
+# Get methods
 class GetBalance(Proto):
     def __init__(self):
         self.cmd_num = CMD_NUMS['GetBalance']
@@ -229,7 +247,7 @@ class GetBlocks(Proto):
         self.create_buffer()
         self.values = (self.cmd_num,
                        #WTF?? Why size it 10??
-                       8,
+                       10,
                        offset,
                        limit)
         self.pack()
@@ -260,11 +278,13 @@ class GetInfo(Proto):
         )
         self.pack()
 
+
 class GetTransactionsByKey(Proto):
     def __init__(self, offset, limit):
         self.cmd_num = CMD_NUMS['GetTransactionsByKey']
         self.structure = struct.Struct('=%s %s' % (F_HEADER, F_TRANSACTIONS))
         self.create_buffer()
+        #Wtf why so big buffer ???
         self.values = (
             self.cmd_num,
             74,
@@ -302,7 +322,7 @@ class GetFee(Proto):
 class SendTransaction(Proto):
     def __init__(self,t):
         self.cmd_num = CMD_NUMS['CommitTransaction']
-        self.structure = struct.Struct('=%s %s' % (F_HEADER,F_TRANSACTION))
+        self.structure = struct.Struct('=%s %s' % (F_HEADER, F_TRANSACTION))
         self.create_buffer()
         self.values = (
             self.cmd_num,
