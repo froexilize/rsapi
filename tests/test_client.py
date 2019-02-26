@@ -7,7 +7,7 @@ from tests.utils import *
 
 
 class TestClient(unittest.TestCase):
-    key_dir = 'test_keys/'
+    key_dir = 'C:/Users/alex/Desktop/Keys/emitter_keys/'
 
     def __init__(self, *args, **kwargs):
         super(TestClient, self).__init__(*args, **kwargs)
@@ -26,10 +26,13 @@ class TestClient(unittest.TestCase):
         self.test_client._handler.disconnect()
 
 
-    @unittest.skip("GetBalance")
+    #@unittest.skip("GetBalance")
     def test_get_balance(self):
-        self.test_client.send_info(self.key1)
+        test_key = load_pub_key(self.key_dir)
+        self.test_client.send_info(test_key)
+
         amount = self.test_client.get_balance()
+        print(amount.integral)
 
         self.assertIsNotNone(self.test_client._handler.response)
         if self.test_client._handler.response is not None:
@@ -142,7 +145,7 @@ class TestClient(unittest.TestCase):
 
 
 
-    @unittest.skip("transactionsbykey")
+    #@unittest.skip("transactionsbykey")
     def test_get_transactionsbykey(self):
         offset = 0
         limit = 3

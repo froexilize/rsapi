@@ -84,6 +84,9 @@ class Proto(object):
             return True
         return False
 
+    def buf_size(self):
+        return self.structure.size
+
 class Signature(Proto):
     def __init__(self):
         self.structure = struct.Struct('=%s' % (F_SIGNATURE))

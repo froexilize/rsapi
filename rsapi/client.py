@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from . import connector as h
+from . import socket_manager as h
 from . import proto as p
 from . import signer
 from . import structs as s
@@ -13,7 +13,7 @@ class apiClient(object):
     public_key = None
 
     def __init__(self):
-        self._handler = h.Connector()
+        self._handler = h.SocketManager()
 
     def set_keys(self,
                  pub_key,
@@ -81,7 +81,7 @@ class apiClient(object):
         txs_list = []
 
         hash_size = 64
-        txs_list_size = self._handler.response.size - hash_size
+        txs_list_size = self._handler.response.buf_size - hash_size
 
         if txs_list_size % hash_size > 0:
             return txs_list
@@ -114,7 +114,7 @@ class apiClient(object):
 
         blocks = []
         block_size = p.calcsize(p.F_HASH)
-        blocks_count = int(self._handler.response.size / block_size)
+        blocks_count = int(self._handler.response.buf_size / block_size)
 
         for b in range(0, blocks_count):
             block_hash = self._handler.recv_into('BlockHash')
