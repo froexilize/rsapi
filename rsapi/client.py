@@ -56,12 +56,8 @@ class apiClient(object):
                                           'wtf',
                                           _type=p.CMD_NUMS['GetBlockSize'],
                                           term_block=False)
-        import binascii
-        print(binascii.hexlify(block_hash.get_hash()))
-
         if block_hash is None:
             return
-
 
         block_size = self._handler.recv_into('BlockSize').values[0]
 
@@ -139,7 +135,6 @@ class apiClient(object):
                                   _type=p.CMD_NUMS['GetTransaction'],
                                     term_block=False)
 
-        print(bloch_hash.get_hash())
 
         tx = self._handler.recv_into('Transaction')
 
@@ -153,7 +148,6 @@ class apiClient(object):
         if not self._handler.is_connected():
             return False
 
-        # TODO to be able parse single Python tuple
         resp_key = self._handler.method(key,
                                         'wtf',
                                         _type=p.CMD_NUMS['GetInfo'],
@@ -170,6 +164,7 @@ class apiClient(object):
         balance = self._handler.method(
                 _type=p.CMD_NUMS['GetBalance'],
                 term_block=True)
+
         if balance is None:
             return None
 
@@ -194,15 +189,16 @@ class apiClient(object):
             return
 
         txs = []
-        tx_size = p.calcsize('=%s' % p.F_TRANSACTION)
-        block_size = p.calcsize('=%s' % p.F_HASH)
-        txs_buffer_size = self._handler.response.size - block_size
 
-        #r_block_hash = self._handler.recv_into('BlockHash')
+        tx_size = p.calcsize('=%s' % p.F_TRANSACTION)
+        util_size = p.calcsize('=%s' % p.F_HASH)
+        txs_buffer_size = self._handler.response.size - util_size
 
         if txs_buffer_size % tx_size > 0:
             return None
-        txs_count = int(txs_buffer_size / tx_size)
+
+        txs_count = int(txs_buffer_size /
+                        tx_size)
 
         for i in range(0, txs_count):
             tx = self._handler.recv_into('Transaction')

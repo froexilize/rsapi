@@ -58,11 +58,11 @@ def _createStruct(type):
         _s = proto.PublicKey()
     elif type == proto.CMD_NUMS['GetCounters']:
         _s = proto.Counters()
-    elif type == proto.CMD_NUMS['GetTransactionsByKey']:
-        _s = proto.Balance()
+
     return _s
 
 
+#TODO mechanism of reconnection
 
 class Connector(object):
     host = '127.0.0.1'
@@ -108,7 +108,6 @@ class Connector(object):
         logging.error("no connection")
         return False
 
-
     def _createStruct(self, _type):
         _s = _createStruct(_type)
 
@@ -143,30 +142,41 @@ class Connector(object):
             if not self.response.cmd_num == cmd:
                 return False
 
-        except Exception:
-            print('')
+        except socket.timeout:
+            self.create_socket()
+            self.connect()
+            self.recv_cmd(cmd)
 
         return True
 
-    def recv_into(self, type):
+    def recv_into(self, _type):
         result = None
-        if type == 'Transaction':
+        if _type == 'Transaction':
             result = proto.Transaction()
-        elif type == 'BlockHash':
+        elif _type == 'BlockHash':
             result = proto.BlockHash()
-        elif type == 'BlockSize':
+        elif _type == 'BlockSize':
             result = proto.BlockSize()
-
-        self.sock.recv_into(result.buffer,
-                            result.structure.size)
-        result.unpack()
+        try:
+            self.sock.recv_into(result.buffer,
+                                result.structure.size)
+            result.unpack()
+        except socket.timeout:
+            self.create_socket()
+            self.connect()
+            self.recv_into(_type)
 
         return result
 
     def recv_term_block(self):
-        resp_block = proto.TerminatingBlock()
-        self.sock.recv_into(resp_block.buffer, resp_block.structure.size)
-        resp_block.unpack()
+        try:
+            resp_block = proto.TerminatingBlock()
+            self.sock.recv_into(resp_block.buffer, resp_block.structure.size)
+            resp_block.unpack()
+        except socket.timeout:
+            self.create_socket()
+            self.connect()
+            self.recv_term_block()
 
 
     def method(self, *argc, _type, term_block):

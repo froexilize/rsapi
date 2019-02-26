@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 import rsapi.client
 import unittest
 from tests.utils import *
-
-
 
 
 class TestClient(unittest.TestCase):
@@ -15,7 +12,7 @@ class TestClient(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestClient, self).__init__(*args, **kwargs)
         self.host = '10.0.0.61'
-        self.port = 38101
+        self.port = 38100
 
         self.test_client = rsapi.apiClient()
 
@@ -40,7 +37,7 @@ class TestClient(unittest.TestCase):
             #self.assertEqual(amount.integral, 4200000000)
             #self.assertEqual(amount.fraction, 0)
 
-    #@unittest.skip("GetCounters")
+    @unittest.skip("GetCounters")
     def test_get_counters(self):
         counters = self.test_client.get_counters()
 
@@ -50,7 +47,7 @@ class TestClient(unittest.TestCase):
         self.assertEqual(counters.blocks, 4)
         self.assertEqual(counters.transactions, 1406)
 
-    #@unittest.skip("GetLastHash")
+    @unittest.skip("GetLastHash")
     def test_get_last_hash(self):
         last_hash = self.test_client.get_last_hash()
         print(last_hash.hash_hex)
@@ -62,7 +59,7 @@ class TestClient(unittest.TestCase):
             self.assertEqual(len(last_hash.hash), 64)
             self.assertEqual(len(last_hash.hash_hex), 128)
 
-    #@unittest.skip("GetBlockSize")
+    @unittest.skip("GetBlockSize")
     def test_get_block_size(self):
         e_pub_key = (b'12cdadbc73da73cbd9985b2a41ffdb8d')
         self.test_client.send_info(e_pub_key)
@@ -82,7 +79,7 @@ class TestClient(unittest.TestCase):
             self.assertEqual(block_size, 694)
 
 
-    #@unittest.skip("GetBlocks")
+    @unittest.skip("GetBlocks")
     def test_get_blocks(self):
         offset = 0
         limit = 50
@@ -96,7 +93,7 @@ class TestClient(unittest.TestCase):
         self.assertEqual(len(blocks), 4)
 
 
-    #@unittest.skip("GetTransaction")
+    @unittest.skip("GetTransaction")
     def test_get_transaction(self):
         e_pub_key = (b'12cdadbc73da73cbd9985b2a41ffdb8d')
         self.test_client.send_info(e_pub_key)
@@ -119,7 +116,7 @@ class TestClient(unittest.TestCase):
         self.assertIsInstance(t, rsapi.Transaction)
 
 
-    #@unittest.skip("GetTransactions")
+    @unittest.skip("GetTransactions")
     def test_get_transactions(self):
         # b_hash = b'6ba4295e07484597caf7722b59c6206fc6735a0d521927b3f556650a073ff12680d24b3aaa51db' \
         #          b'f2096eccaeca8e323e9813cfce2f929881f47b9eac136ae85b'
@@ -145,10 +142,10 @@ class TestClient(unittest.TestCase):
 
 
 
-    #@unittest.skip("transactionsbykey")
+    @unittest.skip("transactionsbykey")
     def test_get_transactionsbykey(self):
         offset = 0
-        limit = 1
+        limit = 3
 
         test_key = load_pub_key(self.key_dir)
 
@@ -158,15 +155,10 @@ class TestClient(unittest.TestCase):
         self.assertIsNotNone(self.test_client._handler.response)
         self.assertTrue(self.test_client._handler.response.check())
 
-        print("Get transactions:")
-        for tx in txs:
-            print(tx.hash_hex)
-            print(vars(tx))
-            print(vars(tx.amount))
+        self.assertEqual(len(txs), 3)
 
-        print(len(txs))
 
-    #@unittest.skip("get_fee")
+    @unittest.skip("get_fee")
     def test_get_fee(self):
         #test_key = load_pub_key(self.key_dir)
         # test_key = (b'c1c02d12cdadbc73da73cbd9985b2a41ffdb8dba9de470eaab453cc3595'
@@ -182,8 +174,8 @@ class TestClient(unittest.TestCase):
 
         self.assertIsNotNone(self.test_client._handler.response)
         self.assertTrue(self.test_client._handler.response.check())
-        self.assertEqual(fee.integral,100)
-        self.assertEqual(fee.fraction,0)
+        self.assertEqual(fee.integral, 100)
+        self.assertEqual(fee.fraction, 0)
 
     @unittest.skip("send_info")
     def test_send_info(self):

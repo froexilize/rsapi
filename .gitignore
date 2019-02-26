@@ -3,7 +3,6 @@ __pycache__/
 venv/
 dist/
 build/
-#test_keys
 keys/
 # Compiled python modules.
 *.pyc
@@ -17,3 +16,4 @@ keys/
 racrypt/
 keys1/
 example/
+**/.DS_Store

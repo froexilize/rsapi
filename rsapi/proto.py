@@ -18,7 +18,9 @@ F_BALANCE = "I Q"
 F_HEADER = 'H I'
 F_CURRENCY = '16s'
 F_TRANSACTIONS = '64s Q H'
+F_TRANSACTION_S = 'Q H 64s'
 F_BLOCKS = 'Q H'
+
 
 CMD_NUMS = {
     'GetInfo': 1,
@@ -37,13 +39,13 @@ CMD_NUMS = {
     'SendTransactions': 14,
     'GetTransaction': 15,
     'SendTransaction': 16,
-    'CommitTransaction':17,
-    'GetLastError':18,
-    'Error':19,
+    'CommitTransaction': 17,
+    'GetLastError': 18,
+    'Error': 19,
     'GetTransactionsByKey':20,
 	'SendTransactionsByKey':21,
-    'GetFee':22,
-    'SendFee':23,
+    'GetFee': 22,
+    'SendFee': 23,
 }
 CMD_NUMS_MAX = max(CMD_NUMS.values())
 
@@ -100,28 +102,9 @@ class PublicKey(Proto):
 
 class Transaction(Proto):
     def __init__(self):
-        self.hash = b''
-        self.sender = b''
-        self.receiver = b''
-        self.integral = 0
-        self.fraction = 0
-        self.currency = b''
-        self.salt = b''
         self.structure = struct.Struct('=%s' % (F_TRANSACTION))
         self.create_buffer()
 
-    def unpack(self):
-        super(Transaction, self).unpack()
-        if len(self.values) > 1:
-            self.hash = self.values[0]
-            self.sender = self.values[1]
-            self.receiver = self.values[2]
-            if isinstance(self.values[3], int):
-                self.integral = self.values[3]
-            if isinstance(self.values[4], int):
-                self.integral = self.values[4]
-            #self.currency = self.values[5]
-            #self.salt = self.values[6]
 
 class TransactionData(Proto):
     def __init__(self):
@@ -192,6 +175,26 @@ class Balance(Proto):
                 self.integral = self.values[0]
             if isinstance(self.values[1], int):
                 self.fraction = self.values[1]
+
+class TransactionsByKey(Proto):
+    def __init__(self):
+        self.offset = 0
+        self.limit = 0
+        self.hash = b''
+        self.structure = struct.Struct('=%s' % (F_TRANSACTION_S))
+        self.create_buffer()
+
+    def unpack(self):
+        super(TransactionsByKey, self).unpack()
+        if len(self.values) > 1:
+            if isinstance(self.values[0], int):
+                self.offset = self.values[0]
+                print('offset', self.offset)
+            if isinstance(self.values[1], int):
+                self.limit = self.values[1]
+                print('limit', self.limit)
+            self.hash = self.values[2]
+
 
 # Get methods
 class GetBalance(Proto):
