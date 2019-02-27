@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from . import socket_manager as h
-from . import proto as p
-from . import signer
-from . import structs as s
+from rsapi import socket_manager as h
+from rsapi import proto as p
+from rsapi import signer
 
 
 class apiClient(object):

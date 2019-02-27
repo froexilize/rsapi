@@ -84,4 +84,6 @@ class ProtoMananger(object):
             result = proto.BlockHash()
         elif _type == 'BlockSize':
             result = proto.BlockSize()
+        elif _type == 'Termblock':
+            result = proto.TerminatingBlock()
         return result
