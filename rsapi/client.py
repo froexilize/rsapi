@@ -4,7 +4,7 @@
 from rsapi import socket_manager as h
 from rsapi import proto as p
 from rsapi import signer
-
+from rsapi import structs as s
 
 class apiClient(object):
     _handler = None
@@ -240,4 +240,23 @@ class apiClient(object):
                                       _type=p.CMD_NUMS['CommitTransaction'],
                                       term_block=True)
 
+        return True
+
+    def send_transaction_array(self, tr_data):
+        tr_list = []
+        #TODO buffer
+        for data in tr_data:
+            target, high, low = data[0]
+            t = signer.transaction(self.private_key,
+                                   self.public_key,
+                                   target,
+                                   high,
+                                   low)
+            tr_list.append(t)
+
+
+        answer = self._handler.method(tr_list,
+                                      'wtf',
+                                      _type=p.CMD_NUMS['CommitTransactionArray'],
+                                      term_block=True)
         return True

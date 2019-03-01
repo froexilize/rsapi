@@ -46,6 +46,7 @@ CMD_NUMS = {
 	'SendTransactionsByKey':21,
     'GetFee': 22,
     'SendFee': 23,
+    'CommitTransactionArray': 24,
 }
 CMD_NUMS_MAX = max(CMD_NUMS.values())
 
@@ -326,7 +327,7 @@ class GetFee(Proto):
 
 
 class SendTransaction(Proto):
-    def __init__(self,t):
+    def __init__(self, t):
         self.cmd_num = CMD_NUMS['CommitTransaction']
         self.structure = struct.Struct('=%s %s' % (F_HEADER, F_TRANSACTION))
         self.create_buffer()
@@ -342,6 +343,22 @@ class SendTransaction(Proto):
             t.salt
         )
         self.pack()
+
+class SendTransactionArray(Proto):
+    def __init__(self, tr_size, tr_buffer):
+        self.cmd_num = CMD_NUMS['CommitTransactionArray']
+        self.create_buffer(tr_size)
+        self.values = (
+            self.cmd_num,
+
+        )
+
+    def create_buffer(self, size):
+        self.buffer = ctypes.create_string_buffer(self.structure.size*size)
+
+    def pack(self):
+
+        self.structure.pack_into(self.buffer, 0, *self.values)
 
 
 

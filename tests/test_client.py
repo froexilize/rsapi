@@ -11,7 +11,7 @@ class TestClient(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super(TestClient, self).__init__(*args, **kwargs)
-        self.host = '10.0.0.61'
+        self.host = '91.245.224.73'
         self.port = 38100
 
         self.test_client = rsapi.apiClient()
@@ -28,7 +28,8 @@ class TestClient(unittest.TestCase):
 
     #@unittest.skip("GetBalance")
     def test_get_balance(self):
-        test_key = load_pub_key(self.key_dir)
+        #test_key = load_pub_key(self.key_dir)
+        test_key = b'53c0aecece0a3d9e2e69230c977e874c8dda4a2fe1f162af98979e69bc27f859'
         self.test_client.send_info(test_key)
 
         amount = self.test_client.get_balance()
@@ -40,15 +41,20 @@ class TestClient(unittest.TestCase):
             #self.assertEqual(amount.integral, 4200000000)
             #self.assertEqual(amount.fraction, 0)
 
-    @unittest.skip("GetCounters")
+    #@unittest.skip("GetCounters")
     def test_get_counters(self):
+        test_key = load_pub_key(self.key_dir)
+        self.test_client.send_info(test_key)
+
         counters = self.test_client.get_counters()
+        print(counters.blocks)
+        print(counters.transactions)
 
         self.assertIsNotNone(self.test_client._handler.response)
         self.assertTrue(self.test_client._handler.response.check())
         self.assertIsInstance(counters, rsapi.Counters)
-        self.assertEqual(counters.blocks, 4)
-        self.assertEqual(counters.transactions, 1406)
+        #self.assertEqual(counters.blocks, 4)
+        #self.assertEqual(counters.transactions, 1406)
 
     @unittest.skip("GetLastHash")
     def test_get_last_hash(self):
@@ -221,6 +227,21 @@ class TestClient(unittest.TestCase):
         self.assertIsNotNone(self.test_client._handler.response)
         #self.assertTrue(self.test_client._handler.response.check())
 
+
+    def test_send_transaction_array(self):
+        key = b'4b335fb3f5fe4669fa2bc7b384d68c377f4e4c1fec878e82bd09158ddb' \
+              b'0c77f2'
+        key1 = b'2cd35fb3f5fe4669fa2bc7b384d68c377f4e4c1fec878e82bd09158ddb' \
+              b'0c88a4'
+
+        tr_data1 = (key, 1, 0)
+        tr_data2 = (key, 2, 0)
+        tr_data = []
+        tr_data.append(tr_data1,
+                       tr_data2)
+
+        ok = self.test_client.send_transaction_array(tr_data)
+        self.assertIsNotNone(self.test_client._handler.response)
 
 if __name__ == '__main__':
     unittest.main()
